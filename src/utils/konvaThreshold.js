@@ -1,0 +1,6 @@
+export const KONVA_THRESHOLDS = {
+  MIN_ARROW_LENGTH:       10,
+  MIN_RECT_SIZE:          10,
+  MIN_CIRCLE_RADIUS:       5,
+  MIN_DOUBLE_ARROW_LENGTH: 10,
+};
