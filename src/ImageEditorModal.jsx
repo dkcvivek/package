@@ -92,6 +92,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   const baseCanvasRef = useRef(null);
   const drawingCanvasRef = useRef(null);
   const canvasAreaRef = useRef(null);
+  const originalImageRef = useRef(null);
 
   // ── resolved image source (handles url / file / blob / dataUrl uniformly) ──
   const [resolvedImage, setResolvedImage] = useState({
@@ -342,9 +343,66 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
         naturalWidth: img.naturalWidth,
         naturalHeight: img.naturalHeight,
       });
+      originalImageRef.current = img;
     };
     img.onerror = () => console.error("Failed to load image for editing.");
   }, [resolvedImage.src, image?.kind]);
+
+  const buildExportCanvas = useCallback(() => {
+    const baseCanvas = baseCanvasRef.current;
+    const drawingCanvas = drawingCanvasRef.current;
+    if (!baseCanvas || !drawingCanvas) return null;
+
+    if (!imageDrawParams || !originalImageRef.current) {
+      // fallback: no natural-size info yet
+      const tmp = document.createElement("canvas");
+      tmp.width = baseCanvas.width;
+      tmp.height = baseCanvas.height;
+      const ctx = tmp.getContext("2d");
+      ctx.drawImage(baseCanvas, 0, 0);
+      ctx.drawImage(drawingCanvas, 0, 0);
+      return tmp;
+    }
+
+    const {
+      naturalWidth,
+      naturalHeight,
+      offsetX,
+      offsetY,
+      drawWidth,
+      drawHeight,
+    } = imageDrawParams;
+    const scale = Math.max(
+      naturalWidth / drawWidth,
+      naturalHeight / drawHeight,
+    );
+
+    const exportWidth = Math.round(baseCanvas.width * scale);
+    const exportHeight = Math.round(baseCanvas.height * scale);
+
+    const tmp = document.createElement("canvas");
+    tmp.width = exportWidth;
+    tmp.height = exportHeight;
+    const ctx = tmp.getContext("2d");
+    if (!ctx) return null;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    // draw the ORIGINAL full-res image, not the shrunk canvas snapshot
+    ctx.drawImage(
+      originalImageRef.current,
+      offsetX * scale,
+      offsetY * scale,
+      drawWidth * scale,
+      drawHeight * scale,
+    );
+
+    // stretch annotations layer up to match (they were drawn at screen res)
+    ctx.drawImage(drawingCanvas, 0, 0, exportWidth, exportHeight);
+
+    return tmp;
+  }, [imageDrawParams]);
 
   useEffect(() => {
     if (!isOpen || !resolvedImage.src) return;
@@ -511,7 +569,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     (canvasEl) => {
       const ctx = drawingCanvasRef.current?.getContext("2d");
       if (ctx && canvasEl) {
-        const destRect = drawingCanvasRef.current.getBoundingClientRect();        
+        const destRect = drawingCanvasRef.current.getBoundingClientRect();
         ctx.drawImage(canvasEl, 0, 0);
       }
       setRectangles([]);
@@ -750,16 +808,8 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   }, [addAction, toast, imageDrawParams]);
 
   const downloadImage = () => {
-    const baseCanvas = baseCanvasRef.current;
-    const drawingCanvas = drawingCanvasRef.current;
-    if (!baseCanvas || !drawingCanvas) return;
-    const tmp = document.createElement("canvas");
-    tmp.width = baseCanvas.width;
-    tmp.height = baseCanvas.height;
-    const ctx = tmp.getContext("2d");
-    if (!ctx) return;
-    ctx.drawImage(baseCanvas, 0, 0);
-    ctx.drawImage(drawingCanvas, 0, 0);
+    const tmp = buildExportCanvas();
+    if (!tmp) return;
     const a = document.createElement("a");
     a.download = `edited-${resolvedImage.name || "image"}.png`;
     a.href = tmp.toDataURL("image/png");
@@ -961,7 +1011,6 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
   };
 
   // ── save / cancel ──────────────────────────────────────────────────────────
-
   const handleSave = async () => {
     if (cropArea) return;
     konvaRectRef.current?.flatten();
@@ -969,16 +1018,9 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
     konvaArrowRef.current?.flatten();
     konvaDoubleArrowRef.current?.flatten();
     textEditorRef.current?.flatten();
-    const baseCanvas = baseCanvasRef.current;
-    const drawingCanvas = drawingCanvasRef.current;
-    if (!baseCanvas || !drawingCanvas) return;
-    const tmp = document.createElement("canvas");
-    tmp.width = baseCanvas.width;
-    tmp.height = baseCanvas.height;
-    const ctx = tmp.getContext("2d");
-    if (!ctx) return;
-    ctx.drawImage(baseCanvas, 0, 0);
-    ctx.drawImage(drawingCanvas, 0, 0);
+
+    const tmp = buildExportCanvas();
+    if (!tmp) return;
 
     try {
       const result = await buildImageEditResult(tmp, {
