@@ -55,7 +55,14 @@ const TextEditor = forwardRef(
 
     useImperativeHandle(ref, () => ({
       flatten: () => {
-        onFlatten(texts);
+        if (trRef.current) {
+          trRef.current.nodes([]);
+          trRef.current.getLayer().batchDraw();
+        }
+        if (stageRef.current) {
+          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
+          onFlatten(canvasEl);
+        }
         setTexts([]);
         setSelectedId(null);
       },
@@ -321,27 +328,50 @@ const TextEditor = forwardRef(
 
     const renderTextarea = () => {
       if (!editingText) return null;
+
+      const margin = 12; // keep the box off the canvas edge
+      const maxAvailableWidth = Math.max(60, width - editingText.x - margin);
+      const maxAvailableHeight = Math.max(40, height - editingText.y - margin);
+      const desiredWidth = Math.min(220, maxAvailableWidth);
+
       return (
         <textarea
           style={{
             position: "absolute",
             top: editingText.y,
             left: editingText.x,
+            width: desiredWidth,
+            maxWidth: maxAvailableWidth,
+            maxHeight: maxAvailableHeight,
             fontSize: fontSize,
             fontFamily: fontFamily,
+            lineHeight: 1.2,
             zIndex: 1000,
             minWidth: 50,
             minHeight: 24,
             background: backgroundColor,
             color: color,
             border: "1px solid #ccc",
-            padding: 2,
+            padding: 4,
+            boxSizing: "border-box",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
+            overflowY: "auto",
+            resize: "none",
           }}
           value={editingText.value}
           autoFocus
-          onChange={(e) =>
-            setEditingText((edit) => edit && { ...edit, value: e.target.value })
-          }
+          onChange={(e) => {
+            setEditingText(
+              (edit) => edit && { ...edit, value: e.target.value },
+            );
+            // auto-grow the box vertically as text wraps to new lines,
+            // capped so it never exceeds the remaining canvas height
+            e.target.style.height = "auto";
+            e.target.style.height =
+              Math.min(e.target.scrollHeight, maxAvailableHeight) + "px";
+          }}
           onBlur={() => {
             if (editingText.value.trim()) {
               if (editingText.id) {
@@ -426,7 +456,16 @@ const TextEditor = forwardRef(
     };
 
     return (
-      <div style={{ width, height, position: "absolute", inset: 0, pointerEvents: active ? "auto" : "none", }}>
+      <div
+        style={{
+          width,
+          height,
+          position: "absolute",
+          inset: 0,
+          pointerEvents: active ? "auto" : "none",
+          overflow: "hidden",
+        }}
+      >
         <Stage
           width={width}
           height={height}

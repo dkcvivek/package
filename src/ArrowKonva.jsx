@@ -46,7 +46,14 @@ const ArrowKonva = forwardRef(
     // ── imperative handle ──────────────────────────────────────────────────
     useImperativeHandle(ref, () => ({
       flatten: () => {
-        onFlatten(arrows);
+        if (trRef.current) {
+          trRef.current.nodes([]);
+          trRef.current.getLayer().batchDraw();
+        }
+        if (stageRef.current) {
+          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
+          onFlatten(canvasEl);
+        }
         setArrows([]);
         setSelectedId(null);
       },

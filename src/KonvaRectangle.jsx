@@ -44,7 +44,16 @@ const KonvaRectangle = forwardRef(
 
     useImperativeHandle(ref, () => ({
       flatten: () => {
-        if (onFlatten) onFlatten(rectangles);
+        if (trRef.current) {
+          trRef.current.nodes([]);
+          trRef.current.getLayer().batchDraw();
+        }
+        if (onFlatten && stageRef.current) {
+          const stage = stageRef.current;
+          const containerRect = stage.container().getBoundingClientRect();
+          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
+          onFlatten(canvasEl);
+        }
         if (setRectangles) setRectangles([]);
         setSelectedId(null);
       },

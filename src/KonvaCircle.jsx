@@ -44,7 +44,14 @@ const KonvaCircle = forwardRef(
 
     useImperativeHandle(ref, () => ({
       flatten: () => {
-        onFlatten(circles);
+        if (trRef.current) {
+          trRef.current.nodes([]);
+          trRef.current.getLayer().batchDraw();
+        }
+        if (stageRef.current) {
+          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
+          onFlatten(canvasEl);
+        }
         setCircles([]);
         setSelectedId(null);
       },
