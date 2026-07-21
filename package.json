@@ -1,6 +1,6 @@
 {
   "name": "@vivekjha659/react-image-editor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A portable, WhatsApp-style image editor modal for React/Next.js apps (Konva-based text/shape layers + freehand drawing).",
   "license": "MIT",
   "main": "./dist/index.js",
