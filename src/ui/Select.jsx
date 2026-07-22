@@ -3,15 +3,15 @@ import React from "react";
 export function Select({ value, onValueChange, children }) {
   // Extract items from children to build native select
   return (
-    <div className="relative">
+    <div className="rie-v0.1.1-relative">
       <select
         value={value}
         onChange={(e) => onValueChange(e.target.value)}
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none pr-7"
+        className="rie-v0.1.1-w-full rie-v0.1.1-border rie-v0.1.1-border-gray-300 rie-v0.1.1-rounded rie-v0.1.1-px-2 rie-v0.1.1-py-1.5 rie-v0.1.1-text-sm rie-v0.1.1-bg-white focus:rie-v0.1.1-outline-none focus:rie-v0.1.1-ring-1 focus:rie-v0.1.1-ring-blue-500 rie-v0.1.1-appearance-none rie-v0.1.1-pr-7"
       >
         {children}
       </select>
-      <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-500 text-xs">▼</div>
+      <div className="rie-v0.1.1-pointer-events-none rie-v0.1.1-absolute rie-v0.1.1-inset-y-0 rie-v0.1.1-right-2 rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-text-gray-500 rie-v0.1.1-text-xs">▼</div>
     </div>
   );
 }

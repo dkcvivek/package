@@ -7,6 +7,7 @@ module.exports = {
   corePlugins: {
     preflight: false,
   },
+  prefix: "rie-v0.1.1",
   theme: {
     extend: {},
   },
