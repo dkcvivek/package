@@ -1172,25 +1172,25 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
 
   return (
     <div
-      className="rie-v0.1.1-fixed rie-v0.1.1-inset-0 rie-v0.1.1-z-50 rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-justify-center rie-v0.1.1-bg-black/80"
+      className="rie-v013-fixed rie-v013-inset-0 rie-v013-z-50 rie-v013-flex rie-v013-items-center rie-v013-justify-center rie-v013-bg-black/80"
       id="image-editor-modal"
       tabIndex={-1}
     >
       <div
-        className="rie-v0.1.1-flex rie-v0.1.1-flex-col rie-v0.1.1-bg-white rie-v0.1.1-w-screen rie-v0.1.1-h-screen lg:rie-v0.1.1-rounded-lg lg:rie-v0.1.1-w-[98vw] lg:rie-v0.1.1-max-w-5xl lg:rie-v0.1.1-h-[80vh] rie-v0.1.1-overflow-hidden"
+        className="rie-v013-flex rie-v013-flex-col rie-v013-bg-white rie-v013-w-screen rie-v013-h-screen lg:rie-v013-rounded-lg lg:rie-v013-w-[98vw] lg:rie-v013-max-w-5xl lg:rie-v013-h-[80vh] rie-v013-overflow-hidden"
         style={isMobile ? { height: "100dvh" } : undefined}
       >
         {/* Header */}
-        <div className="rie-v0.1.1-p-4 rie-v0.1.1-border-b rie-v0.1.1-hidden lg:rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-justify-between">
-          <h2 className="rie-v0.1.1-text-lg rie-v0.1.1-font-semibold">
+        <div className="rie-v013-p-4 rie-v013-border-b rie-v013-hidden lg:rie-v013-flex rie-v013-items-center rie-v013-justify-between">
+          <h2 className="rie-v013-text-lg rie-v013-font-semibold">
             Edit Image: {resolvedImage.name}
           </h2>
         </div>
 
         {/* Body */}
-        <div className="rie-v0.1.1-flex rie-v0.1.1-flex-col lg:rie-v0.1.1-flex-row rie-v0.1.1-flex-grow rie-v0.1.1-overflow-hidden">
+        <div className="rie-v013-flex rie-v013-flex-col lg:rie-v013-flex-row rie-v013-flex-grow rie-v013-overflow-hidden">
           {/* ── Mobile toolbar ── */}
-          <div className="lg:rie-v0.1.1-hidden">
+          <div className="lg:rie-v013-hidden">
             <MobileView
               historyState={historyState}
               undo={undo}
@@ -1233,50 +1233,50 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
           </div>
 
           {/* ── Left panel (desktop) ── */}
-          <div className="rie-v0.1.1-hidden lg:rie-v0.1.1-flex rie-v0.1.1-flex-col lg:rie-v0.1.1-w-52 lg:rie-v0.1.1-flex-shrink-0 lg:rie-v0.1.1-border-r rie-v0.1.1-p-2 rie-v0.1.1-gap-2 rie-v0.1.1-overflow-y-auto">
+          <div className="rie-v013-hidden lg:rie-v013-flex rie-v013-flex-col lg:rie-v013-w-52 lg:rie-v013-flex-shrink-0 lg:rie-v013-border-r rie-v013-p-2 rie-v013-gap-2 rie-v013-overflow-y-auto">
             {/* Undo / Redo */}
-            <div className="rie-v0.1.1-flex rie-v0.1.1-justify-between rie-v0.1.1-gap-2">
+            <div className="rie-v013-flex rie-v013-justify-between rie-v013-gap-2">
               <Button
                 variant="outline"
                 onClick={handleUndo}
                 disabled={!canUndo}
                 title={`Undo (${actionCount} actions)`}
-                className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-2 rie-v0.1.1-p-3"
+                className="rie-v013-flex rie-v013-items-center rie-v013-gap-2 rie-v013-p-3"
               >
-                <Undo2 className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" /> Undo
+                <Undo2 className="rie-v013-h-4 rie-v013-w-4" /> Undo
               </Button>
               <Button
                 variant="outline"
                 onClick={handleRedo}
                 disabled={!canRedo}
                 title="Redo"
-                className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-2 rie-v0.1.1-p-3"
+                className="rie-v013-flex rie-v013-items-center rie-v013-gap-2 rie-v013-p-3"
               >
-                <Redo2 className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" /> Redo
+                <Redo2 className="rie-v013-h-4 rie-v013-w-4" /> Redo
               </Button>
             </div>
 
             {/* Tool grid */}
-            <div className="rie-v0.1.1-grid rie-v0.1.1-grid-cols-2 rie-v0.1.1-gap-2">
+            <div className="rie-v013-grid rie-v013-grid-cols-2 rie-v013-gap-2">
               {[
-                ["pencil", <Pencil className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />, "Pencil"],
-                ["eraser", <Eraser className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />, "Eraser"],
-                ["rectangle", <Square className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />, "Rectangle"],
-                ["circle", <Circle className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />, "Circle"],
-                ["text", <Type className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />, "Text"],
-                ["arrow", <ArrowRight className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />, "Arrow"],
+                ["pencil", <Pencil className="rie-v013-h-4 rie-v013-w-4" />, "Pencil"],
+                ["eraser", <Eraser className="rie-v013-h-4 rie-v013-w-4" />, "Eraser"],
+                ["rectangle", <Square className="rie-v013-h-4 rie-v013-w-4" />, "Rectangle"],
+                ["circle", <Circle className="rie-v013-h-4 rie-v013-w-4" />, "Circle"],
+                ["text", <Type className="rie-v013-h-4 rie-v013-w-4" />, "Text"],
+                ["arrow", <ArrowRight className="rie-v013-h-4 rie-v013-w-4" />, "Arrow"],
                 [
                   "double-arrow",
-                  <ArrowRightLeft className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />,
+                  <ArrowRightLeft className="rie-v013-h-4 rie-v013-w-4" />,
                   "Double Arrow",
                 ],
-                ["line", <MinusIcon className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />, "Line"],
+                ["line", <MinusIcon className="rie-v013-h-4 rie-v013-w-4" />, "Line"],
               ].map(([tool, icon, label]) => (
                 <Button
                   key={tool}
                   variant={activeTool === tool ? "secondary" : "ghost"}
                   onClick={() => handleToolChange(tool)}
-                  className="rie-v0.1.1-!flex rie-v0.1.1-!flex-col rie-v0.1.1-!px-2 rie-v0.1.1-!py-1 rie-v0.1.1-!gap-1 rie-v0.1.1-min-w-[45%] rie-v0.1.1-!h-max"
+                  className="rie-v013-!flex rie-v013-!flex-col rie-v013-!px-2 rie-v013-!py-1 rie-v013-!gap-1 rie-v013-min-w-[45%] rie-v013-!h-max"
                 >
                   {icon} {label}
                 </Button>
@@ -1286,32 +1286,32 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
               <Button
                 variant={activeTool === "crop" ? "secondary" : "ghost"}
                 onClick={() => handleToolChange("crop")}
-                className="rie-v0.1.1-!flex rie-v0.1.1-!flex-col rie-v0.1.1-!px-2 rie-v0.1.1-!py-1 rie-v0.1.1-!gap-1 rie-v0.1.1-min-w-[45%] rie-v0.1.1-!h-max"
+                className="rie-v013-!flex rie-v013-!flex-col rie-v013-!px-2 rie-v013-!py-1 rie-v013-!gap-1 rie-v013-min-w-[45%] rie-v013-!h-max"
               >
-                <Crop className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" /> Crop
+                <Crop className="rie-v013-h-4 rie-v013-w-4" /> Crop
               </Button>
 
               <Button
                 variant={activeTool === "curve" ? "secondary" : "ghost"}
                 onClick={() => setActiveTool("curve")}
-                className="rie-v0.1.1-!flex rie-v0.1.1-!flex-col rie-v0.1.1-!px-2 rie-v0.1.1-!py-1 rie-v0.1.1-!gap-1 rie-v0.1.1-min-w-[45%] rie-v0.1.1-!h-max"
+                className="rie-v013-!flex rie-v013-!flex-col rie-v013-!px-2 rie-v013-!py-1 rie-v013-!gap-1 rie-v013-min-w-[45%] rie-v013-!h-max"
               >
-                <PenTool className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" /> Curve
+                <PenTool className="rie-v013-h-4 rie-v013-w-4" /> Curve
               </Button>
 
               <Button
                 variant={activeTool === "curve-arrow" ? "secondary" : "ghost"}
                 onClick={() => setActiveTool("curve-arrow")}
-                className="rie-v0.1.1-!flex rie-v0.1.1-!flex-col rie-v0.1.1-!px-2 rie-v0.1.1-!py-1 rie-v0.1.1-!gap-1 rie-v0.1.1-min-w-[45%] rie-v0.1.1-!h-max"
+                className="rie-v013-!flex rie-v013-!flex-col rie-v013-!px-2 rie-v013-!py-1 rie-v013-!gap-1 rie-v013-min-w-[45%] rie-v013-!h-max"
               >
-                <TbArrowCurveRight className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" /> Curve Arrow
+                <TbArrowCurveRight className="rie-v013-h-4 rie-v013-w-4" /> Curve Arrow
               </Button>
             </div>
 
             {/* Crop controls */}
             {activeTool === "crop" && (
-              <div className="rie-v0.1.1-space-y-2 rie-v0.1.1-mt-2">
-                <p className="rie-v0.1.1-text-sm rie-v0.1.1-text-gray-500">
+              <div className="rie-v013-space-y-2 rie-v013-mt-2">
+                <p className="rie-v013-text-sm rie-v013-text-gray-500">
                   Draw a rectangle to crop. Click Apply to confirm.
                 </p>
                 <Button
@@ -1322,14 +1322,14 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                     if (ctx)
                       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
                   }}
-                  className="rie-v0.1.1-!flex rie-v0.1.1-!flex-col rie-v0.1.1-!px-2 rie-v0.1.1-!py-1 rie-v0.1.1-!gap-1 rie-v0.1.1-w-full rie-v0.1.1-!h-max"
+                  className="rie-v013-!flex rie-v013-!flex-col rie-v013-!px-2 rie-v013-!py-1 rie-v013-!gap-1 rie-v013-w-full rie-v013-!h-max"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={applyCrop}
                   disabled={!cropArea}
-                  className="rie-v0.1.1-!flex rie-v0.1.1-!flex-col rie-v0.1.1-!px-2 rie-v0.1.1-!py-1 rie-v0.1.1-!gap-1 rie-v0.1.1-w-full rie-v0.1.1-!h-max"
+                  className="rie-v013-!flex rie-v013-!flex-col rie-v013-!px-2 rie-v013-!py-1 rie-v013-!gap-1 rie-v013-w-full rie-v013-!h-max"
                 >
                   Apply
                 </Button>
@@ -1347,12 +1347,12 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                 "curve",
                 "curve-arrow",
               ].includes(activeTool) && (
-                <div className="rie-v0.1.1-mt-4">
+                <div className="rie-v013-mt-4">
                   <Label
                     htmlFor="stroke-style"
-                    className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-2 rie-v0.1.1-mb-1"
+                    className="rie-v013-flex rie-v013-items-center rie-v013-gap-2 rie-v013-mb-1"
                   >
-                    <Grip className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" /> Stroke Style
+                    <Grip className="rie-v013-h-4 rie-v013-w-4" /> Stroke Style
                   </Label>
                   <Select value={strokeStyle} onValueChange={setStrokeStyle}>
                     <SelectItem value="solid">Solid</SelectItem>
@@ -1365,8 +1365,8 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
             {/* Background color */}
             {activeTool &&
               ["text", "rectangle", "circle"].includes(activeTool) && (
-                <div className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-2 rie-v0.1.1-mt-2">
-                  <Label htmlFor="backgroundColor" className="rie-v0.1.1-text-sm">
+                <div className="rie-v013-flex rie-v013-items-center rie-v013-gap-2 rie-v013-mt-2">
+                  <Label htmlFor="backgroundColor" className="rie-v013-text-sm">
                     Background
                   </Label>
                   <input
@@ -1378,46 +1378,46 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                         : backgroundColor
                     }
                     onChange={(e) => setBackgroundColor(e.target.value)}
-                    className="rie-v0.1.1-rounded-full rie-v0.1.1-w-6 rie-v0.1.1-h-6 rie-v0.1.1-cursor-pointer"
+                    className="rie-v013-rounded-full rie-v013-w-6 rie-v013-h-6 rie-v013-cursor-pointer"
                   />
                   <GrClear
-                    className="rie-v0.1.1-h-4 rie-v0.1.1-w-4 rie-v0.1.1-cursor-pointer"
+                    className="rie-v013-h-4 rie-v013-w-4 rie-v013-cursor-pointer"
                     onClick={() => setBackgroundColor("transparent")}
                   />
                 </div>
               )}
 
             {/* Color picker */}
-            <div className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-2 rie-v0.1.1-mt-4">
+            <div className="rie-v013-flex rie-v013-items-center rie-v013-gap-2 rie-v013-mt-4">
               <Label
                 htmlFor="color-picker-lg"
-                className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-2"
+                className="rie-v013-flex rie-v013-items-center rie-v013-gap-2"
               >
-                <Palette className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" /> Color
+                <Palette className="rie-v013-h-4 rie-v013-w-4" /> Color
               </Label>
               <input
                 type="color"
                 value={currentColor}
                 onChange={(e) => setCurrentColor(e.target.value)}
-                className="rie-v0.1.1-rounded-full rie-v0.1.1-w-12 rie-v0.1.1-h-6 rie-v0.1.1-cursor-pointer"
+                className="rie-v013-rounded-full rie-v013-w-12 rie-v013-h-6 rie-v013-cursor-pointer"
               />
             </div>
 
             {/* Brush size */}
-            <div className="rie-v0.1.1-mt-4">
-              <Label htmlFor="brush-size-lg" className="rie-v0.1.1-mb-2 rie-v0.1.1-block">
+            <div className="rie-v013-mt-4">
+              <Label htmlFor="brush-size-lg" className="rie-v013-mb-2 rie-v013-block">
                 Brush Size: {brushSize}px
               </Label>
-              <div className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-2">
+              <div className="rie-v013-flex rie-v013-items-center rie-v013-gap-2">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() =>
                     setBrushSize((s) => Math.max(minBrushSize, s - 1))
                   }
-                  className="rie-v0.1.1-h-8 rie-v0.1.1-w-8"
+                  className="rie-v013-h-8 rie-v013-w-8"
                 >
-                  <Minus className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />
+                  <Minus className="rie-v013-h-4 rie-v013-w-4" />
                 </Button>
                 <Slider
                   id="brush-size-lg"
@@ -1426,7 +1426,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                   step={1}
                   value={[brushSize]}
                   onValueChange={(v) => setBrushSize(v[0])}
-                  className="rie-v0.1.1-flex-grow"
+                  className="rie-v013-flex-grow"
                 />
                 <Button
                   variant="outline"
@@ -1434,9 +1434,9 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                   onClick={() =>
                     setBrushSize((s) => Math.min(maxBrushSize, s + 1))
                   }
-                  className="rie-v0.1.1-h-8 rie-v0.1.1-w-8"
+                  className="rie-v013-h-8 rie-v013-w-8"
                 >
-                  <Plus className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />
+                  <Plus className="rie-v013-h-4 rie-v013-w-4" />
                 </Button>
               </div>
             </div>
@@ -1445,10 +1445,10 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
           {/* ── Canvas area ── */}
           <div
             ref={canvasAreaRef}
-            className="rie-v0.1.1-flex-1 rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-justify-center rie-v0.1.1-bg-black lg:rie-v0.1.1-bg-gray-100 rie-v0.1.1-min-h-0 rie-v0.1.1-relative rie-v0.1.1-overflow-hidden rie-v0.1.1-px-2 rie-v0.1.1-pb-[80px] lg:rie-v0.1.1-p-0"
+            className="rie-v013-flex-1 rie-v013-flex rie-v013-items-center rie-v013-justify-center rie-v013-bg-black lg:rie-v013-bg-gray-100 rie-v013-min-h-0 rie-v013-relative rie-v013-overflow-hidden rie-v013-px-2 rie-v013-pb-[80px] lg:rie-v013-p-0"
           >
             <div
-              className="rie-v0.1.1-relative lg:rie-v0.1.1-border-2 lg:rie-v0.1.1-border-gray-300"
+              className="rie-v013-relative lg:rie-v013-border-2 lg:rie-v013-border-gray-300"
               id="drawing-canvas"
               style={{
                 width: canvasDimensions.width,
@@ -1459,7 +1459,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
             >
               <canvas
                 ref={baseCanvasRef}
-                className="rie-v0.1.1-absolute rie-v0.1.1-bg-black lg:rie-v0.1.1-bg-white rie-v0.1.1-object-contain rie-v0.1.1-w-full rie-v0.1.1-h-full"
+                className="rie-v013-absolute rie-v013-bg-black lg:rie-v013-bg-white rie-v013-object-contain rie-v013-w-full rie-v013-h-full"
               />
               <canvas
                 ref={drawingCanvasRef}
@@ -1482,7 +1482,7 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                   stopDrawing();
                   setEraserCursor(null);
                 }}
-                className="rie-v0.1.1-absolute rie-v0.1.1-w-full rie-v0.1.1-h-full"
+                className="rie-v013-absolute rie-v013-w-full rie-v013-h-full"
                 style={{
                   cursor:
                     activeTool === "text"
@@ -1693,10 +1693,10 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
               {showTrashIcon && (
                 <div
                   id="trash-zone"
-                  className={`rie-v0.1.1-fixed rie-v0.1.1-top-0 rie-v0.1.1-left-0 rie-v0.1.1-p-3 rie-v0.1.1-rounded-full rie-v0.1.1-shadow-lg rie-v0.1.1-border-2 rie-v0.1.1-transition-all rie-v0.1.1-duration-200 rie-v0.1.1-text-white ${
+                  className={`rie-v013-fixed rie-v013-top-0 rie-v013-left-0 rie-v013-p-3 rie-v013-rounded-full rie-v013-shadow-lg rie-v013-border-2 rie-v013-transition-all rie-v013-duration-200 rie-v013-text-white ${
                     isDraggedOverTrash
-                      ? "rie-v0.1.1-bg-red-600 rie-v0.1.1-border-red-700 rie-v0.1.1-scale-125"
-                      : "rie-v0.1.1-bg-red-500 rie-v0.1.1-border-red-600"
+                      ? "rie-v013-bg-red-600 rie-v013-border-red-700 rie-v013-scale-125"
+                      : "rie-v013-bg-red-500 rie-v013-border-red-600"
                   }`}
                   style={{
                     background: isDraggedOverTrash
@@ -1710,9 +1710,9 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
                   }}
                 >
                   <Trash2
-                    className={`rie-v0.1.1-h-6 rie-v0.1.1-w-6 rie-v0.1.1-transition-transform rie-v0.1.1-duration-200 ${isDraggedOverTrash ? "rie-v0.1.1-scale-110" : ""}`}
+                    className={`rie-v013-h-6 rie-v013-w-6 rie-v013-transition-transform rie-v013-duration-200 ${isDraggedOverTrash ? "rie-v013-scale-110" : ""}`}
                   />
-                  <div className="rie-v0.1.1-absolute -rie-v0.1.1-top-8 rie-v0.1.1-left-1/2 -rie-v0.1.1-translate-x-1/2 rie-v0.1.1-bg-black rie-v0.1.1-text-white rie-v0.1.1-text-[8px] rie-v0.1.1-px-2 rie-v0.1.1-py-1 rie-v0.1.1-rounded rie-v0.1.1-whitespace-nowrap rie-v0.1.1-pointer-events-none">
+                  <div className="rie-v013-absolute -rie-v013-top-8 rie-v013-left-1/2 -rie-v013-translate-x-1/2 rie-v013-bg-black rie-v013-text-white rie-v013-text-[8px] rie-v013-px-2 rie-v013-py-1 rie-v013-rounded rie-v013-whitespace-nowrap rie-v013-pointer-events-none">
                     {isDraggedOverTrash
                       ? "Release to delete"
                       : "Drag here to delete"}
@@ -1723,35 +1723,35 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
           </div>
 
           {/* ── Bottom black spacer (mobile only) ── */}
-          <div className="lg:rie-v0.1.1-hidden rie-v0.1.1-bg-black rie-v0.1.1-flex-shrink-0 rie-v0.1.1-pb-[env(safe-area-inset-bottom)]" />
+          <div className="lg:rie-v013-hidden rie-v013-bg-black rie-v013-flex-shrink-0 rie-v013-pb-[env(safe-area-inset-bottom)]" />
         </div>
 
         {/* ── Footer ── */}
-        <div className="rie-v0.1.1-p-2 sm:rie-v0.1.1-p-4 rie-v0.1.1-border-t rie-v0.1.1-hidden lg:rie-v0.1.1-flex rie-v0.1.1-justify-end rie-v0.1.1-flex-row rie-v0.1.1-gap-2 rie-v0.1.1-flex-wrap">
+        <div className="rie-v013-p-2 sm:rie-v013-p-4 rie-v013-border-t rie-v013-hidden lg:rie-v013-flex rie-v013-justify-end rie-v013-flex-row rie-v013-gap-2 rie-v013-flex-wrap">
           <Button
             variant="outline"
             onClick={applyBlackAndWhite}
-            className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-text-[12px] rie-v0.1.1-w-max"
+            className="rie-v013-flex rie-v013-items-center rie-v013-text-[12px] rie-v013-w-max"
           >
-            <Filter className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />
-            <span className="rie-v0.1.1-hidden sm:rie-v0.1.1-block rie-v0.1.1-ml-1">Apply Filter</span>
+            <Filter className="rie-v013-h-4 rie-v013-w-4" />
+            <span className="rie-v013-hidden sm:rie-v013-block rie-v013-ml-1">Apply Filter</span>
           </Button>
           <Button
             variant="secondary"
             onClick={downloadImage}
-            className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-text-[12px] rie-v0.1.1-w-max"
+            className="rie-v013-flex rie-v013-items-center rie-v013-text-[12px] rie-v013-w-max"
           >
-            <Download className="rie-v0.1.1-h-4 rie-v0.1.1-w-4" />
-            <span className="rie-v0.1.1-hidden sm:rie-v0.1.1-block rie-v0.1.1-ml-1">Download</span>
+            <Download className="rie-v013-h-4 rie-v013-w-4" />
+            <span className="rie-v013-hidden sm:rie-v013-block rie-v013-ml-1">Download</span>
           </Button>
           <Button
             variant="outline"
             onClick={handleCancel}
-            className="rie-v0.1.1-text-[12px] rie-v0.1.1-w-max"
+            className="rie-v013-text-[12px] rie-v013-w-max"
           >
             Cancel
           </Button>
-          <Button onClick={handleSave} className="rie-v0.1.1-text-[12px] rie-v0.1.1-w-max">
+          <Button onClick={handleSave} className="rie-v013-text-[12px] rie-v013-w-max">
             Save Changes
           </Button>
         </div>
@@ -1759,20 +1759,20 @@ export default function ImageEditorModal({ isOpen, onClose, image, onSave }) {
 
       {/* ── Cancel confirm overlay ── */}
       {showCancelConfirm && (
-        <div className="rie-v0.1.1-absolute rie-v0.1.1-inset-0 rie-v0.1.1-z-50 rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-justify-center rie-v0.1.1-bg-black/60">
-          <div className="rie-v0.1.1-bg-white rie-v0.1.1-rounded-lg rie-v0.1.1-p-6 rie-v0.1.1-w-[90%] rie-v0.1.1-max-w-md rie-v0.1.1-shadow-xl">
-            <h3 className="rie-v0.1.1-text-lg rie-v0.1.1-font-semibold rie-v0.1.1-mb-2">
+        <div className="rie-v013-absolute rie-v013-inset-0 rie-v013-z-50 rie-v013-flex rie-v013-items-center rie-v013-justify-center rie-v013-bg-black/60">
+          <div className="rie-v013-bg-white rie-v013-rounded-lg rie-v013-p-6 rie-v013-w-[90%] rie-v013-max-w-md rie-v013-shadow-xl">
+            <h3 className="rie-v013-text-lg rie-v013-font-semibold rie-v013-mb-2">
               Are you sure you want to cancel?
             </h3>
-            <p className="rie-v0.1.1-text-gray-600 rie-v0.1.1-mb-4">
+            <p className="rie-v013-text-gray-600 rie-v013-mb-4">
               You have unsaved changes. Are you sure you want to cancel and lose
               your work?
             </p>
-            <div className="rie-v0.1.1-flex rie-v0.1.1-justify-end rie-v0.1.1-gap-2">
+            <div className="rie-v013-flex rie-v013-justify-end rie-v013-gap-2">
               <Button
                 variant="outline"
                 onClick={() => setShowCancelConfirm(false)}
-                className="rie-v0.1.1-mt-0"
+                className="rie-v013-mt-0"
               >
                 No, keep editing
               </Button>

@@ -108,11 +108,11 @@ const MobileView = ({
   };
 
   const barClass =
-    "rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-justify-between rie-v0.1.1-px-3 rie-v0.1.1-w-full rie-v0.1.1-flex-shrink-0";
+    "rie-v013-flex rie-v013-items-center rie-v013-justify-between rie-v013-px-3 rie-v013-w-full rie-v013-flex-shrink-0";
   const barStyle = { height: TOOLBAR_HEIGHT };
 
   return (
-    <div className="lg:rie-v0.1.1-hidden rie-v0.1.1-flex rie-v0.1.1-flex-col rie-v0.1.1-w-full rie-v0.1.1-bg-black rie-v0.1.1-text-white">
+    <div className="lg:rie-v013-hidden rie-v013-flex rie-v013-flex-col rie-v013-w-full rie-v013-bg-black rie-v013-text-white">
       {/* ── Level 1 ──────────────────────────────────────────────────────── */}
       {level === null && (
         <div
@@ -124,37 +124,37 @@ const MobileView = ({
           }}
         >
           <button onClick={handleCancel} title="Discard">
-            <X className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />
+            <X className="rie-v013-h-5 rie-v013-w-5" />
           </button>
 
-          <div className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-5">
+          <div className="rie-v013-flex rie-v013-items-center rie-v013-gap-5">
             <button onClick={downloadImage} title="Download">
-              <Download className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />
+              <Download className="rie-v013-h-5 rie-v013-w-5" />
             </button>
             <button onClick={() => enterLevel("crop", "crop")} title="Crop">
-              <Crop className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />
+              <Crop className="rie-v013-h-5 rie-v013-w-5" />
             </button>
             <button
               onClick={() => enterLevel("sticker", "rectangle")}
               title="Sticker"
             >
-              <Sticker className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />
+              <Sticker className="rie-v013-h-5 rie-v013-w-5" />
             </button>
             <button onClick={() => enterLevel("text", "text")} title="Text">
-              <Type className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />
+              <Type className="rie-v013-h-5 rie-v013-w-5" />
             </button>
             <button
               onClick={() => enterLevel("pencil", "pencil")}
               title="Pencil"
             >
-              <Pencil className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />
+              <Pencil className="rie-v013-h-5 rie-v013-w-5" />
             </button>
             <button
               onClick={handleSave}
               title="Send"
-              className="rie-v0.1.1-bg-green-700 rie-v0.1.1-p-1 rie-v0.1.1-rounded-full"
+              className="rie-v013-bg-green-700 rie-v013-p-1 rie-v013-rounded-full"
             >
-              <Check className="rie-v0.1.1-h-5 rie-v0.1.1-w-5 rie-v0.1.1-text-white-400 rie-v0.1.1-font-bold" />
+              <Check className="rie-v013-h-5 rie-v013-w-5 rie-v013-text-white-400 rie-v013-font-bold" />
             </button>
           </div>
         </div>
@@ -163,21 +163,21 @@ const MobileView = ({
       {/* ── Level 2: Pencil ──────────────────────────────────────────────── */}
       {level === "pencil" && (
         <div className={barClass} style={barStyle}>
-          <div className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-3">
+          <div className="rie-v013-flex rie-v013-items-center rie-v013-gap-3">
             <button onClick={confirmPencil} title="Confirm">
-              <Check className="rie-v0.1.1-h-5 rie-v0.1.1-w-5 rie-v0.1.1-text-green-400" />
+              <Check className="rie-v013-h-5 rie-v013-w-5 rie-v013-text-green-400" />
             </button>
             <button
               onClick={undo}
               disabled={!scopedCanUndo}
-              className="disabled:rie-v0.1.1-opacity-30"
+              className="disabled:rie-v013-opacity-30"
               title="Undo"
             >
-              <Undo2 className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />
+              <Undo2 className="rie-v013-h-5 rie-v013-w-5" />
             </button>
           </div>
-          <div className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-3">
-            <span className="rie-v0.1.1-text-xs rie-v0.1.1-opacity-70 rie-v0.1.1-whitespace-nowrap">
+          <div className="rie-v013-flex rie-v013-items-center rie-v013-gap-3">
+            <span className="rie-v013-text-xs rie-v013-opacity-70 rie-v013-whitespace-nowrap">
               {brushSize}px
             </span>
             <input
@@ -187,10 +187,10 @@ const MobileView = ({
               step={1}
               value={brushSize}
               onChange={(e) => setBrushSize(Number(e.target.value))}
-              className="rie-v0.1.1-w-20 rie-v0.1.1-accent-white"
+              className="rie-v013-w-20 rie-v013-accent-white"
             />
             <label
-              className="rie-v0.1.1-relative rie-v0.1.1-w-6 rie-v0.1.1-h-6 rie-v0.1.1-rounded-full rie-v0.1.1-flex-shrink-0 rie-v0.1.1-cursor-pointer rie-v0.1.1-overflow-hidden"
+              className="rie-v013-relative rie-v013-w-6 rie-v013-h-6 rie-v013-rounded-full rie-v013-flex-shrink-0 rie-v013-cursor-pointer rie-v013-overflow-hidden"
               style={{
                 background: currentColor,
                 border: "2px solid rgba(255,255,255,0.7)",
@@ -228,14 +228,14 @@ const MobileView = ({
           }}
         >
           <button onClick={confirmText} title="Confirm">
-            <Check className="rie-v0.1.1-h-5 rie-v0.1.1-w-5 rie-v0.1.1-text-green-400" />
+            <Check className="rie-v013-h-5 rie-v013-w-5 rie-v013-text-green-400" />
           </button>
 
-          <div className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-3">
+          <div className="rie-v013-flex rie-v013-items-center rie-v013-gap-3">
             <button
               onClick={cycleTextBg}
               title="Text background"
-              className="rie-v0.1.1-relative rie-v0.1.1-w-7 rie-v0.1.1-h-7 rie-v0.1.1-rounded-md rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-justify-center rie-v0.1.1-flex-shrink-0"
+              className="rie-v013-relative rie-v013-w-7 rie-v013-h-7 rie-v013-rounded-md rie-v013-flex rie-v013-items-center rie-v013-justify-center rie-v013-flex-shrink-0"
               style={{
                 background:
                   textBgColor === "transparent"
@@ -245,7 +245,7 @@ const MobileView = ({
               }}
             >
               <span
-                className="rie-v0.1.1-text-xs rie-v0.1.1-font-semibold"
+                className="rie-v013-text-xs rie-v013-font-semibold"
                 style={{
                   color:
                     textBgColor === "#ffffff"
@@ -260,7 +260,7 @@ const MobileView = ({
             </button>
 
             <label
-              className="rie-v0.1.1-relative rie-v0.1.1-w-6 rie-v0.1.1-h-6 rie-v0.1.1-rounded-full rie-v0.1.1-flex-shrink-0 rie-v0.1.1-cursor-pointer rie-v0.1.1-overflow-hidden"
+              className="rie-v013-relative rie-v013-w-6 rie-v013-h-6 rie-v013-rounded-full rie-v013-flex-shrink-0 rie-v013-cursor-pointer rie-v013-overflow-hidden"
               style={{
                 background: textColor,
                 border: "2px solid rgba(255,255,255,0.7)",
@@ -292,12 +292,12 @@ const MobileView = ({
         <div className={barClass} style={barStyle}>
           <button onClick={confirmCrop} disabled={!cropArea} title="Confirm">
             <Check
-              className={`rie-v0.1.1-h-5 rie-v0.1.1-w-5 ${cropArea ? "rie-v0.1.1-text-green-400" : "rie-v0.1.1-text-gray-500"}`}
+              className={`rie-v013-h-5 rie-v013-w-5 ${cropArea ? "rie-v013-text-green-400" : "rie-v013-text-gray-500"}`}
             />
           </button>
           <button
             onClick={discardCrop}
-            className="rie-v0.1.1-text-sm rie-v0.1.1-opacity-80"
+            className="rie-v013-text-sm rie-v013-opacity-80"
             title="Discard"
           >
             Discard
@@ -308,37 +308,37 @@ const MobileView = ({
       {/* ── Level 2: Sticker ─────────────────────────────────────────────── */}
       {level === "sticker" && (
         <div className={barClass} style={barStyle}>
-          <div className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-3">
+          <div className="rie-v013-flex rie-v013-items-center rie-v013-gap-3">
             <button onClick={confirmSticker} title="Confirm">
-              <Check className="rie-v0.1.1-h-5 rie-v0.1.1-w-5 rie-v0.1.1-text-green-400" />
+              <Check className="rie-v013-h-5 rie-v013-w-5 rie-v013-text-green-400" />
             </button>
             <button
               onClick={undo}
               disabled={!scopedCanUndo}
-              className="disabled:rie-v0.1.1-opacity-30"
+              className="disabled:rie-v013-opacity-30"
               title="Undo"
             >
-              <Undo2 className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />
+              <Undo2 className="rie-v013-h-5 rie-v013-w-5" />
             </button>
           </div>
-          <div className="rie-v0.1.1-flex rie-v0.1.1-items-center rie-v0.1.1-gap-4">
+          <div className="rie-v013-flex rie-v013-items-center rie-v013-gap-4">
             {[
-              ["rectangle", <Square className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />],
-              ["circle", <Circle className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />],
-              ["arrow", <ArrowRight className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />],
-              ["double-arrow", <ArrowRightLeft className="rie-v0.1.1-h-5 rie-v0.1.1-w-5" />],
+              ["rectangle", <Square className="rie-v013-h-5 rie-v013-w-5" />],
+              ["circle", <Circle className="rie-v013-h-5 rie-v013-w-5" />],
+              ["arrow", <ArrowRight className="rie-v013-h-5 rie-v013-w-5" />],
+              ["double-arrow", <ArrowRightLeft className="rie-v013-h-5 rie-v013-w-5" />],
             ].map(([tool, icon]) => (
               <button
                 key={tool}
                 onClick={() => handleToolChange(tool)}
-                className={`rie-v0.1.1-p-1 rie-v0.1.1-rounded ${activeTool === tool ? "rie-v0.1.1-bg-white/20" : ""}`}
+                className={`rie-v013-p-1 rie-v013-rounded ${activeTool === tool ? "rie-v013-bg-white/20" : ""}`}
                 title={tool}
               >
                 {icon}
               </button>
             ))}
             <label
-              className="rie-v0.1.1-relative rie-v0.1.1-w-6 rie-v0.1.1-h-6 rie-v0.1.1-rounded-full rie-v0.1.1-flex-shrink-0 rie-v0.1.1-cursor-pointer rie-v0.1.1-overflow-hidden"
+              className="rie-v013-relative rie-v013-w-6 rie-v013-h-6 rie-v013-rounded-full rie-v013-flex-shrink-0 rie-v013-cursor-pointer rie-v013-overflow-hidden"
               style={{
                 background: currentColor,
                 border: "2px solid rgba(255,255,255,0.7)",
