@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * prefix-classnames-v4.mjs
+ * prefix-classnames.mjs
  *
  * v4 adds one thing on top of v3: VariableDeclarator now also handles
  * ObjectExpression inits (e.g. `const variantClasses = { default: "...", ... }`)
@@ -9,8 +9,8 @@
  * classification, review workflow) is unchanged from v3.
  *
  * USAGE:
- *   node scripts/prefix-classnames-v4.mjs --dir ./src --prefix rie-v0.1.1- --dry
- *   node scripts/prefix-classnames-v4.mjs --dir ./src --prefix rie-v0.1.1- --write
+ *   node scripts/prefix-classnames.mjs --dir ./src --prefix rie-v0.1.1- --dry
+ *   node scripts/prefix-classnames.mjs --dir ./src --prefix rie-v0.1.1- --write
  *
  * Always run --dry first.
  */
