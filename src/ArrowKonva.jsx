@@ -8,6 +8,8 @@ import React, {
   useImperativeHandle,
 } from "react";
 import { Stage, Layer, Arrow, Transformer } from "react-konva";
+import { snapshotStage } from "@/utils/konvaSnapshot";
+import { useKonvaSelection } from "@/hooks/useKonvaSelection";
 import { getDashPattern } from "@/utils/getStrokePattern";
 import { KONVA_THRESHOLDS } from "@/utils/konvaThreshold";
 
@@ -32,6 +34,7 @@ const ArrowKonva = forwardRef(
       onElementDeselect,
       checkTrashZoneCollision,
       updateTrashZoneState,
+      onDelete,
     },
     ref,
   ) => {
@@ -51,7 +54,7 @@ const ArrowKonva = forwardRef(
           trRef.current.getLayer().batchDraw();
         }
         if (stageRef.current) {
-          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
+          const canvasEl = snapshotStage(stageRef.current);
           onFlatten(canvasEl);
         }
         setArrows([]);
@@ -72,27 +75,24 @@ const ArrowKonva = forwardRef(
     useEffect(() => {
       const handleKeyDown = (e) => {
         if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
-          setArrows((arrs) => arrs.filter((a) => a.id !== selectedId));
+          if (onDelete) onDelete(selectedId);
+          else setArrows((arrs) => arrs.filter((a) => a.id !== selectedId));
           setSelectedId(null);
         }
       };
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selectedId, setArrows]);
+    }, [selectedId, setArrows, onDelete]);
 
-    // ── transformer sync ───────────────────────────────────────────────────
-    useEffect(() => {
-      if (trRef.current && selectedId && stageRef.current) {
-        const node = stageRef.current.findOne(`#${selectedId}`);
-        if (node) {
-          trRef.current.nodes([node]);
-          trRef.current.getLayer().batchDraw();
-        }
-      } else if (trRef.current) {
-        trRef.current.nodes([]);
-        trRef.current.getLayer().batchDraw();
-      }
-    }, [selectedId, arrows]);
+    // ── transformer sync + stale-selection cleanup ─────────────────────────
+    useKonvaSelection({
+      stageRef,
+      trRef,
+      selectedId,
+      setSelectedId,
+      elements: arrows,
+      onElementDeselect,
+    });
 
     // ── live colour / size update on selected arrow ────────────────────────
     useEffect(() => {
@@ -358,7 +358,11 @@ const ArrowKonva = forwardRef(
       const cy = (pts[1] + pts[3]) / 2 + y;
 
       if (checkTrashZoneCollision?.(rect.left + cx, rect.top + cy)) {
-        setArrows((arrs) => arrs.filter((a) => a.id !== id));
+        // Route deletion through history — the Konva arrays are derived from
+        // the action log, so a bare local filter is undone by the very next
+        // action or undo/redo (the shape reappears).
+        if (onDelete) onDelete(id);
+        else setArrows((arrs) => arrs.filter((a) => a.id !== id));
         setSelectedId(null);
         onElementDeselect?.();
         return;
@@ -432,7 +436,11 @@ const ArrowKonva = forwardRef(
               points={arrow.points}
               stroke={arrow.stroke}
               strokeWidth={arrow.strokeWidth}
-              hitStrokeWidth={Math.max(60, arrow.strokeWidth * 4)}
+              // Touch target, not a dead zone: 60-90px meant a single arrow
+              // blanketed a third of a phone screen, and every press inside
+              // that band failed the `clickedOnEmpty` test — so you could not
+              // start a second arrow anywhere near the first.
+              hitStrokeWidth={Math.max(24, arrow.strokeWidth * 4)}
               perfectDrawEnabled={false}
               dash={arrow.dash}
               pointerLength={15}
@@ -458,7 +466,8 @@ const ArrowKonva = forwardRef(
               points={newArrow.points}
               stroke={newArrow.stroke}
               strokeWidth={newArrow.strokeWidth}
-              hitStrokeWidth={Math.max(90, newArrow.strokeWidth * 4)}
+              // The in-progress preview must never intercept pointer events.
+              listening={false}
               perfectDrawEnabled={false}
               dash={newArrow.dash}
               pointerLength={15}

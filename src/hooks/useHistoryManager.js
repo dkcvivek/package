@@ -1,19 +1,47 @@
-"use client";
-
-import { useState, useRef, useCallback, useEffect, useReducer } from "react";
+import {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+} from "react";
 import {
   applyDrawingAction,
   replayAllDrawingActions,
 } from "@/utils/canvasReplay";
+import { getDpr, resizeCanvasToLogical, withDeviceSpace } from "@/utils/canvasGeometry";
 
-export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
+/**
+ * @param {object} params
+ * @param {React.RefObject<HTMLCanvasElement>} params.drawingCanvasRef
+ * @param {React.RefObject<HTMLCanvasElement>} params.baseCanvasRef
+ * @param {React.RefObject<number>} [params.dprRef] - the dpr the canvases were
+ *   sized at. Passed in rather than read from `window` so undo/redo restores
+ *   geometry at the exact ratio the action was recorded with; reading
+ *   `window.devicePixelRatio` here silently corrupts a crop undo if the value
+ *   changed (browser zoom, window moved to another monitor) or if the editor
+ *   clamped it.
+ */
+export function useHistoryManager({
+  drawingCanvasRef,
+  baseCanvasRef,
+  dprRef,
+}) {
+  const resolveDpr = useCallback(
+    () => dprRef?.current || getDpr(),
+    [dprRef],
+  );
   // ── History stack ────────────────────────────────────────────────────────
   // Stored in refs so addAction / undo / redo never have stale-closure issues.
   const allActionsRef = useRef([]); // full stack including redo-able future
   const currentStepRef = useRef(-1); // index of last committed action (-1 = empty)
 
-  // Trigger re-renders when refs mutate (canUndo / canRedo / actionCount updates)
-  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+  // Trigger re-renders when refs mutate (canUndo / canRedo / actionCount
+  // updates). The counter is also the cache key for `historyState` below —
+  // every mutation of the two refs goes through forceUpdate, so it ticking is
+  // exactly the condition under which the derived snapshot changes.
+  const [version, forceUpdate] = useReducer((x) => x + 1, 0);
 
   // ── Konva element arrays (owned here, passed as props to Konva components) ─
   const [rectangles, setRectangles] = useState([]);
@@ -139,30 +167,38 @@ export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
       const drawingCanvas = drawingCanvasRef.current;
       const drawingCtx = drawingCanvas?.getContext("2d");
       if (!baseCanvas || !baseCtx) return;
+      const dpr = resolveDpr();
 
       if (action.type === "APPLY_FILTER") {
+        // putImageData is device-space and transform-agnostic — no conversion.
         const id = action.payload?.previousImageData;
         if (id) baseCtx.putImageData(id, 0, 0);
       }
 
       if (action.type === "CROP_IMAGE") {
+        // prevWidth/prevHeight are DEVICE px (they were read off canvas.width),
+        // so restore the buffer directly and re-apply the dpr transform after —
+        // assigning canvas.width resets the context's transform to identity.
         const { prevWidth, prevHeight, baseImageData, drawingImageData } =
           action.payload || {};
         if (baseImageData && prevWidth && prevHeight) {
-          baseCanvas.width = prevWidth;
-          baseCanvas.height = prevHeight;
+          resizeCanvasToLogical(baseCanvas, prevWidth / dpr, prevHeight / dpr, dpr);
           baseCtx.putImageData(baseImageData, 0, 0);
         }
         // Keep the drawing (annotation) layer's buffer in lockstep with the
         // base layer — mismatched dimensions is what causes distorted strokes.
         if (drawingCanvas && drawingCtx && prevWidth && prevHeight) {
-          drawingCanvas.width = prevWidth;
-          drawingCanvas.height = prevHeight;
+          resizeCanvasToLogical(
+            drawingCanvas,
+            prevWidth / dpr,
+            prevHeight / dpr,
+            dpr,
+          );
           if (drawingImageData) drawingCtx.putImageData(drawingImageData, 0, 0);
         }
       }
     },
-    [baseCanvasRef, drawingCanvasRef],
+    [baseCanvasRef, drawingCanvasRef, resolveDpr],
   );
 
   const redoBaseAction = useCallback(
@@ -172,6 +208,7 @@ export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
       const drawingCanvas = drawingCanvasRef.current;
       const drawingCtx = drawingCanvas?.getContext("2d");
       if (!baseCanvas || !baseCtx) return;
+      const dpr = resolveDpr();
 
       if (action.type === "APPLY_FILTER") {
         const id = action.payload?.newImageData;
@@ -179,8 +216,19 @@ export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
       }
 
       if (action.type === "CROP_IMAGE") {
-        const { cropArea: v } = action.payload || {};
-        if (!v) return;
+        // cropArea is stored in LOGICAL px (that's the space the user drew it
+        // in); the blit itself happens in device px so the photo is not
+        // resampled and softened by a redo.
+        const { cropArea: vLogical } = action.payload || {};
+        if (!vLogical) return;
+        const v = {
+          x: Math.round(vLogical.x * dpr),
+          y: Math.round(vLogical.y * dpr),
+          width: Math.round(vLogical.width * dpr),
+          height: Math.round(vLogical.height * dpr),
+        };
+        if (v.width <= 0 || v.height <= 0) return;
+
         const tmpBase = document.createElement("canvas");
         tmpBase.width = v.width;
         tmpBase.height = v.height;
@@ -198,19 +246,22 @@ export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
           v.height,
         );
 
-        baseCanvas.width = v.width;
-        baseCanvas.height = v.height;
-        baseCtx.clearRect(0, 0, v.width, v.height);
-        baseCtx.drawImage(tmpBase, 0, 0);
+        resizeCanvasToLogical(baseCanvas, vLogical.width, vLogical.height, dpr);
+        withDeviceSpace(baseCtx, dpr, (deviceCtx) =>
+          deviceCtx.drawImage(tmpBase, 0, 0),
+        );
 
         if (drawingCanvas && drawingCtx) {
-          drawingCanvas.width = v.width;
-          drawingCanvas.height = v.height;
-          drawingCtx.clearRect(0, 0, v.width, v.height);
+          resizeCanvasToLogical(
+            drawingCanvas,
+            vLogical.width,
+            vLogical.height,
+            dpr,
+          );
         }
       }
     },
-    [baseCanvasRef, drawingCanvasRef],
+    [baseCanvasRef, drawingCanvasRef, resolveDpr],
   );
 
   // ── Public API ────────────────────────────────────────────────────────────
@@ -288,10 +339,19 @@ export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
 
   // ── Derived values (computed from refs at render time) ───────────────────
   // Since forceUpdate() is called whenever refs mutate, these are always fresh.
-  const historyState = {
-    actions: allActionsRef.current.slice(0, currentStepRef.current + 1),
-    currentStep: currentStepRef.current,
-  };
+  //
+  // `historyState` is memoised on the mutation counter because that `.slice()`
+  // copies the entire action log, and this runs on EVERY render of the editor —
+  // including each one caused by an unrelated bit of UI state. The consumers
+  // also use it as an effect/prop dependency, so a fresh object identity per
+  // render was defeating their memoisation as well.
+  const historyState = useMemo(
+    () => ({
+      actions: allActionsRef.current.slice(0, currentStepRef.current + 1),
+      currentStep: currentStepRef.current,
+    }),
+    [version],
+  );
   const canUndo = currentStepRef.current >= 0;
   const canRedo = currentStepRef.current < allActionsRef.current.length - 1;
   const actionCount = currentStepRef.current + 1;
@@ -369,6 +429,6 @@ export function useHistoryManager({ drawingCanvasRef, baseCanvasRef }) {
     textEditorRef,
     resetHistoryTo,
     removeKonvaActionsByType,
-    removeActionsByTarget
+    removeActionsByTarget,
   };
 }

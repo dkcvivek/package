@@ -1,6 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import {
+  getDpr,
+  getLogicalPointerPos,
+  clearLogical,
+} from "@/utils/canvasGeometry";
 
 export const CurveTool = ({
   active,
@@ -14,7 +19,11 @@ export const CurveTool = ({
   addAction,
   replayManager,
   historyState,
+  dprRef,
 }) => {
+  // Same ratio the editor sized the canvas at — see @/utils/canvasGeometry.
+  const dpr = () => dprRef?.current || getDpr();
+
   const [curves, setCurves] = useState([]);
   const [currentCurve, setCurrentCurve] = useState([]);
   const [selectedCurveIndex, setSelectedCurveIndex] = useState(null);
@@ -63,21 +72,10 @@ export const CurveTool = ({
     replayManager,
   ]);
 
-  // Helper to get coordinates for both Mouse and Touch
-  const getPointerPos = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-
-    // Handle touch vs mouse
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-    return {
-      x: (clientX - rect.left) * (canvas.width / rect.width),
-      y: (clientY - rect.top) * (canvas.height / rect.height),
-    };
-  };
+  // Logical canvas coordinates for both mouse and touch. Must match the space
+  // ImageEditorModal draws in, or curves land away from the finger.
+  const getPointerPos = (e) =>
+    getLogicalPointerPos(canvasRef.current, e, dpr());
 
   const drawBezier = (ctx, points, color, size, style) => {
     if (points.length < 2) return;
@@ -128,8 +126,10 @@ export const CurveTool = ({
       replayManager: replay,
     } = stateRef.current;
 
-    // Clear and redraw background history
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear and redraw background history. Clear in logical px — the CSS box
+    // (getBoundingClientRect) can be smaller than the logical canvas and would
+    // leave a stale band of the previous frame along the right/bottom edge.
+    clearLogical(ctx, dpr());
     if (replay?.current) {
       const drawingActions = hist?.actions?.filter(
         (a) => a.target === "drawing",

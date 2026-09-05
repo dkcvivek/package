@@ -1,6 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import {
+  getDpr,
+  getLogicalPointerPos,
+  clearLogical,
+} from "@/utils/canvasGeometry";
 
 const CurveArrowTool = ({
   active,
@@ -12,7 +17,11 @@ const CurveArrowTool = ({
   addAction,
   replayManager,
   historyState,
+  dprRef,
 }) => {
+  // Same ratio the editor sized the canvas at — see @/utils/canvasGeometry.
+  const dpr = () => dprRef?.current || getDpr();
+
   const [drawing, setDrawing] = useState(false);
   const curveRef = useRef([]);
   const requestRef = useRef();
@@ -83,8 +92,8 @@ const CurveArrowTool = ({
       replayManager: replay,
     } = stateRef.current;
 
-    // 1. Clear context for fresh rendering
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // 1. Clear context for fresh rendering, in logical px (see CurveTool).
+    clearLogical(ctx, dpr());
 
     // 2. Replay persistent history state
     if (replay?.current && hist?.actions) {
@@ -132,16 +141,8 @@ const CurveArrowTool = ({
     if (active) renderCanvas();
   }, [historyState, active, renderCanvas]);
 
-  const getEventPos = (e) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return {
-      x: (clientX - rect.left) * (canvas.width / rect.width),
-      y: (clientY - rect.top) * (canvas.height / rect.height),
-    };
-  };
+  const getEventPos = (e) =>
+    getLogicalPointerPos(canvasRef.current, e, dpr());
 
   const handleStart = (e) => {
     if (!active) return;

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, {
@@ -8,7 +7,80 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
+import Konva from "konva";
 import { Stage, Layer, Text, Transformer, Group, Rect } from "react-konva";
+import { snapshotStage } from "@/utils/konvaSnapshot";
+import { useKonvaSelection } from "@/hooks/useKonvaSelection";
+
+// Shared geometry for the editing <textarea> and the committed Konva text, so
+// the two wrap at the same width. `TEXT_PADDING` is both the textarea's CSS
+// padding and the inset of the Konva <Text> inside its background <Rect>.
+const TEXT_MARGIN = 12; // gap between the text box and the canvas edge
+const TEXT_PADDING = 8;
+const TEXT_LINE_HEIGHT = 1.25;
+
+/** Wrap width available to a text box spanning the canvas minus its margins. */
+const defaultWrapWidth = (canvasWidth) =>
+  Math.max(40, canvasWidth - TEXT_MARGIN * 2 - TEXT_PADDING * 2);
+
+// One reusable offscreen node — measuring is per-text-per-render, so allocating
+// a Konva.Text each time would churn.
+let measureNode = null;
+
+/**
+ * Measures text the way Konva will actually lay it out.
+ *
+ * The previous implementation measured with a hidden DOM <span>, which has no
+ * concept of the wrap width. A long string therefore reported one enormous
+ * line, and the committed text rendered as a single line running off the
+ * canvas even though the textarea had wrapped it. Measuring through Konva with
+ * the same wrap width the textarea used keeps the two identical, and gives the
+ * background <Rect> the right size for free.
+ *
+ * @returns {{ width: number, height: number, wrapWidth: number }} logical px
+ */
+function measureText({ text, fontSize, fontFamily, maxWidth }) {
+  const safeText = text || "";
+  const fallback = {
+    width: maxWidth,
+    height: fontSize * TEXT_LINE_HEIGHT,
+    wrapWidth: maxWidth,
+  };
+  if (typeof window === "undefined") return fallback;
+
+  try {
+    if (!measureNode) measureNode = new Konva.Text({});
+    const node = measureNode;
+    node.setAttrs({
+      text: safeText,
+      fontSize,
+      fontFamily,
+      lineHeight: TEXT_LINE_HEIGHT,
+      padding: 0,
+      align: "left",
+      wrap: "none",
+    });
+    node.width(undefined); // let it report its natural, unwrapped width
+
+    const natural = node.getTextWidth();
+    if (natural <= maxWidth) {
+      // Fits on its natural lines — size the bubble to the text, not the
+      // full canvas width. +2px slack so rounding can't force a stray wrap.
+      const width = Math.ceil(natural) + 2;
+      return { width, height: Math.ceil(node.height()), wrapWidth: width };
+    }
+
+    node.width(maxWidth);
+    node.wrap("word");
+    return {
+      width: maxWidth,
+      height: Math.ceil(node.height()),
+      wrapWidth: maxWidth,
+    };
+  } catch {
+    return fallback;
+  }
+}
 
 const TextEditor = forwardRef(
   (
@@ -60,7 +132,7 @@ const TextEditor = forwardRef(
           trRef.current.getLayer().batchDraw();
         }
         if (stageRef.current) {
-          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
+          const canvasEl = snapshotStage(stageRef.current);
           onFlatten(canvasEl);
         }
         setTexts([]);
@@ -78,23 +150,12 @@ const TextEditor = forwardRef(
       }
     }, [width, height]);
 
-    useEffect(() => {
-      if (stageRef.current && active) {
-        const stage = stageRef.current;
-        const drawingCanvas = document.querySelector(
-          'canvas[class*="absolute w-full h-full"]:last-of-type',
-        );
-
-        if (drawingCanvas) {
-          const actualWidth = drawingCanvas.width;
-          const actualHeight = drawingCanvas.height;
-          stage.width(actualWidth);
-          stage.height(actualHeight);
-          stage.size({ width: actualWidth, height: actualHeight });
-          stage.batchDraw();
-        }
-      }
-    }, [active, width, height]);
+    // NOTE: there used to be a second effect here that re-sized the stage from
+    // `document.querySelector('canvas...').width`. That reads the DEVICE-pixel
+    // backing store of a HiDPI canvas and stamped it onto a stage whose
+    // coordinate space is logical px, so text rendered at 1/dpr scale in the
+    // top-left corner. The `width`/`height` props above are already the logical
+    // canvas size — that is the only correct source.
 
     useEffect(() => {
       const handleKeyDown = (e) => {
@@ -110,15 +171,14 @@ const TextEditor = forwardRef(
       return () => window.removeEventListener("keydown", handleKeyDown);
     }, [selectedId, onDelete, onElementDeselect]);
 
-    useEffect(() => {
-      if (trRef.current && selectedId) {
-        const node = stageRef.current.findOne(`#${selectedId}`);
-        if (node) {
-          trRef.current.nodes([node]);
-          trRef.current.getLayer().batchDraw();
-        }
-      }
-    }, [selectedId, texts]);
+    useKonvaSelection({
+      stageRef,
+      trRef,
+      selectedId,
+      setSelectedId,
+      elements: texts,
+      onElementDeselect,
+    });
 
     useEffect(() => {
       if (selectedId && active) {
@@ -329,30 +389,46 @@ const TextEditor = forwardRef(
     const renderTextarea = () => {
       if (!editingText) return null;
 
-      const margin = 12; // keep the box off the canvas edge
-      const maxAvailableWidth = Math.max(60, width - editingText.x - margin);
-      const maxAvailableHeight = Math.max(40, height - editingText.y - margin);
-      const desiredWidth = Math.min(220, maxAvailableWidth);
+      // Span the canvas, leaving only TEXT_MARGIN either side. The box used to
+      // be a fixed 220px starting at the tap point, so it looked pinned to the
+      // right and gave the user a narrow column to type into.
+      const boxWidth = Math.max(80, width - TEXT_MARGIN * 2);
+      const wrapWidth = boxWidth - TEXT_PADDING * 2;
+      const top = Math.max(
+        TEXT_MARGIN,
+        Math.min(editingText.y, Math.max(TEXT_MARGIN, height - 96)),
+      );
+      const maxAvailableHeight = Math.max(48, height - top - TEXT_MARGIN);
+
+      const autoGrow = (el) => {
+        if (!el) return;
+        el.style.height = "auto";
+        el.style.height =
+          Math.min(el.scrollHeight, maxAvailableHeight) + "px";
+      };
 
       return (
         <textarea
+          ref={autoGrow}
           style={{
             position: "absolute",
-            top: editingText.y,
-            left: editingText.x,
-            width: desiredWidth,
-            maxWidth: maxAvailableWidth,
+            top,
+            left: TEXT_MARGIN,
+            width: boxWidth,
             maxHeight: maxAvailableHeight,
             fontSize: fontSize,
             fontFamily: fontFamily,
-            lineHeight: 1.2,
+            lineHeight: TEXT_LINE_HEIGHT,
             zIndex: 1000,
-            minWidth: 50,
             minHeight: 24,
             background: backgroundColor,
             color: color,
-            border: "1px solid #ccc",
-            padding: 4,
+            // border-box + zero border keeps the content width exactly
+            // `wrapWidth`, which is what the committed Konva text wraps at.
+            border: 0,
+            outline: "1px solid rgba(255,255,255,0.65)",
+            borderRadius: 10,
+            padding: TEXT_PADDING,
             boxSizing: "border-box",
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
@@ -366,38 +442,40 @@ const TextEditor = forwardRef(
             setEditingText(
               (edit) => edit && { ...edit, value: e.target.value },
             );
-            // auto-grow the box vertically as text wraps to new lines,
-            // capped so it never exceeds the remaining canvas height
-            e.target.style.height = "auto";
-            e.target.style.height =
-              Math.min(e.target.scrollHeight, maxAvailableHeight) + "px";
+            autoGrow(e.target);
           }}
           onBlur={() => {
             if (editingText.value.trim()) {
               if (editingText.id) {
+                const previous = texts.find((t) => t.id === editingText.id);
+                const updated = {
+                  ...previous,
+                  text: editingText.value,
+                  fill: color,
+                  backgroundColor: backgroundColor,
+                };
                 setTexts((arr) =>
-                  arr.map((t) =>
-                    t.id === editingText.id
-                      ? {
-                          ...t,
-                          text: editingText.value,
-                          fill: color,
-                          backgroundColor: backgroundColor,
-                        }
-                      : t,
-                  ),
+                  arr.map((t) => (t.id === editingText.id ? updated : t)),
                 );
+                // Record it. `texts` is derived from the history log, so a
+                // local-only update to an existing text was silently reverted
+                // by the next konva action or undo.
+                if (previous) onMove?.(editingText.id, updated, previous);
               } else {
                 const newId = `text-${Date.now()}`;
                 const newText = {
                   id: newId,
-                  x: editingText.x,
-                  y: editingText.y,
+                  x: TEXT_MARGIN,
+                  y: top,
                   text: editingText.value,
                   fontSize,
                   fontFamily,
                   fill: color,
                   backgroundColor: backgroundColor,
+                  // Persist the width the user actually typed against, so the
+                  // committed text wraps identically to the textarea instead of
+                  // stretching into one line across the whole image.
+                  maxWidth: wrapWidth,
                   draggable: true,
                 };
                 setTexts((arr) => [...arr, newText]);
@@ -430,6 +508,7 @@ const TextEditor = forwardRef(
       const previousText = texts.find((t) => t.id === id);
       const scaleX = group.scaleX();
       const scaleY = group.scaleY();
+      const rotation = group.rotation();
       const x = group.x();
       const y = group.y();
 
@@ -439,6 +518,7 @@ const TextEditor = forwardRef(
         y,
         scaleX,
         scaleY,
+        rotation,
       };
 
       setTexts((arr) => arr.map((t) => (t.id === id ? newText : t)));
@@ -448,7 +528,8 @@ const TextEditor = forwardRef(
           previousText.x !== x ||
           previousText.y !== y ||
           (previousText.scaleX || 1) !== scaleX ||
-          (previousText.scaleY || 1) !== scaleY;
+          (previousText.scaleY || 1) !== scaleY ||
+          (previousText.rotation || 0) !== rotation;
         if (hasChanged) {
           onMove(id, newText, previousText);
         }
@@ -503,18 +584,19 @@ const TextEditor = forwardRef(
         >
           <Layer>
             {texts.map((t) => {
-              const textNode = document.createElement("span");
-              textNode.innerText = t.text;
-              textNode.style.fontSize = `${t.fontSize}px`;
-              textNode.style.fontFamily = t.fontFamily;
-              textNode.style.lineHeight = "1";
-              textNode.style.position = "absolute";
-              textNode.style.visibility = "hidden";
-              document.body.appendChild(textNode);
-              const padding = 6;
-              const width = textNode.offsetWidth + padding * 2;
-              const height = textNode.offsetHeight + padding * 2;
-              document.body.removeChild(textNode);
+              // Measure through Konva at the same wrap width the textarea used.
+              // NOTE: the old code measured with a hidden DOM <span> and named
+              // the results `width`/`height`, shadowing the stage-size props of
+              // the same name inside this block.
+              const wrapWidth = t.maxWidth || defaultWrapWidth(width);
+              const metrics = measureText({
+                text: t.text,
+                fontSize: t.fontSize,
+                fontFamily: t.fontFamily,
+                maxWidth: wrapWidth,
+              });
+              const boxWidth = metrics.width + TEXT_PADDING * 2;
+              const boxHeight = metrics.height + TEXT_PADDING * 2;
 
               return (
                 <Group
@@ -524,6 +606,7 @@ const TextEditor = forwardRef(
                   y={t.y}
                   scaleX={t.scaleX || 1}
                   scaleY={t.scaleY || 1}
+                  rotation={t.rotation || 0}
                   draggable={t.draggable}
                   onClick={() => {
                     handleTextClick(t.id);
@@ -543,8 +626,8 @@ const TextEditor = forwardRef(
                   onTransformEnd={(e) => handleTransformEnd(e, t.id)}
                 >
                   <Rect
-                    width={width}
-                    height={height}
+                    width={boxWidth}
+                    height={boxHeight}
                     fill={t.backgroundColor}
                     cornerRadius={10}
                   />
@@ -553,23 +636,25 @@ const TextEditor = forwardRef(
                     fontSize={t.fontSize}
                     fontFamily={t.fontFamily}
                     fill={t.fill}
-                    x={padding}
-                    y={padding}
-                    lineHeight={1}
+                    x={TEXT_PADDING}
+                    y={TEXT_PADDING}
+                    width={metrics.wrapWidth}
+                    wrap="word"
+                    lineHeight={TEXT_LINE_HEIGHT}
                   />
                 </Group>
               );
             })}
             <Transformer
               ref={trRef}
-              rotateEnabled={false}
+              rotateEnabled
               enabledAnchors={[
                 "top-left",
                 "top-right",
                 "bottom-left",
                 "bottom-right",
               ]}
-              anchorSize={8}
+              anchorSize={10}
               borderDash={[4, 4]}
             />
           </Layer>

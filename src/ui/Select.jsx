@@ -1,17 +1,18 @@
+"use client";
 import React from "react";
 
 export function Select({ value, onValueChange, children }) {
   // Extract items from children to build native select
   return (
-    <div className="relative">
+    <div className="rie-relative">
       <select
         value={value}
         onChange={(e) => onValueChange(e.target.value)}
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none pr-7"
+        className="rie-w-full rie-border rie-border-gray-300 rie-rounded rie-px-2 rie-py-1.5 rie-text-sm rie-bg-white focus:rie-outline-none focus:rie-ring-1 focus:rie-ring-blue-500 rie-appearance-none rie-pr-7"
       >
         {children}
       </select>
-      <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-500 text-xs">▼</div>
+      <div className="rie-pointer-events-none rie-absolute rie-inset-y-0 rie-right-2 rie-flex rie-items-center rie-text-gray-500 rie-text-xs">▼</div>
     </div>
   );
 }

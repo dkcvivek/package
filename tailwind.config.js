@@ -7,6 +7,10 @@ module.exports = {
   corePlugins: {
     preflight: false,
   },
+  prefix: "rie-",
+  // Emit every utility as `#image-editor-modal .rie-x` so a host app's own
+  // `button {}` / `.card button {}` rules can't override the editor.
+  important: "#image-editor-modal",
   theme: {
     extend: {},
   },

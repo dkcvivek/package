@@ -1,5 +1,4 @@
 "use client";
-
 import React, {
   useRef,
   useState,
@@ -8,6 +7,8 @@ import React, {
   useImperativeHandle,
 } from "react";
 import { Stage, Layer, Arrow, Transformer } from "react-konva";
+import { snapshotStage } from "@/utils/konvaSnapshot";
+import { useKonvaSelection } from "@/hooks/useKonvaSelection";
 import { getDashPattern } from "@/utils/getStrokePattern";
 import { KONVA_THRESHOLDS } from "@/utils/konvaThreshold";
 
@@ -32,6 +33,7 @@ const KonvaDoubleArrow = forwardRef(
       onElementDeselect,
       checkTrashZoneCollision,
       updateTrashZoneState,
+      onDelete,
     },
     ref,
   ) => {
@@ -50,7 +52,7 @@ const KonvaDoubleArrow = forwardRef(
           trRef.current.getLayer().batchDraw();
         }
         if (stageRef.current) {
-          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
+          const canvasEl = snapshotStage(stageRef.current);
           onFlatten(canvasEl);
         }
         setArrows([]);
@@ -77,34 +79,16 @@ const KonvaDoubleArrow = forwardRef(
       }
     }, [width, height]);
 
-    useEffect(() => {
-      if (trRef.current && stageRef.current) {
-        if (selectedId) {
-          const node = stageRef.current.findOne(`#${selectedId}`);
-          if (node) {
-            trRef.current.nodes([node]);
-          } else {
-            trRef.current.nodes([]);
-          }
-        } else {
-          trRef.current.nodes([]);
-        }
-        trRef.current.getLayer().batchDraw();
-      }
-    }, [selectedId, arrows]);
-
-    useEffect(() => {
-      if (trRef.current && selectedId && stageRef.current) {
-        const node = stageRef.current.findOne(`#${selectedId}`);
-        if (node) {
-          trRef.current.nodes([node]);
-          trRef.current.getLayer().batchDraw();
-        }
-      } else if (trRef.current) {
-        trRef.current.nodes([]);
-        trRef.current.getLayer().batchDraw();
-      }
-    }, [selectedId, arrows]);
+    // Two near-duplicate transformer-sync effects used to live here; the second
+    // could re-attach what the first had just cleared. Replaced by one hook.
+    useKonvaSelection({
+      stageRef,
+      trRef,
+      selectedId,
+      setSelectedId,
+      elements: arrows,
+      onElementDeselect,
+    });
 
     useEffect(() => {
       if (selectedId) {
@@ -335,7 +319,11 @@ const KonvaDoubleArrow = forwardRef(
         checkTrashZoneCollision &&
         checkTrashZoneCollision(screenX, screenY)
       ) {
-        setArrows((arrs) => arrs.filter((a) => a.id !== id));
+        // Route deletion through history — the Konva arrays are derived from
+        // the action log, so a bare local filter is undone by the very next
+        // action or undo/redo (the shape reappears).
+        if (onDelete) onDelete(id);
+        else setArrows((arrs) => arrs.filter((a) => a.id !== id));
         setSelectedId(null);
         if (onElementDeselect) onElementDeselect();
         return;
@@ -423,7 +411,11 @@ const KonvaDoubleArrow = forwardRef(
               points={arrow.points}
               stroke={arrow.stroke}
               strokeWidth={arrow.strokeWidth}
-              hitStrokeWidth={Math.max(90, arrow.strokeWidth * 4)}
+              // Touch target, not a dead zone: 60-90px meant a single arrow
+              // blanketed a third of a phone screen, and every press inside
+              // that band failed the `clickedOnEmpty` test — so you could not
+              // start a second arrow anywhere near the first.
+              hitStrokeWidth={Math.max(24, arrow.strokeWidth * 4)}
               perfectDrawEnabled={false}
               dash={arrow.dash}
               pointerLength={15}
@@ -450,7 +442,8 @@ const KonvaDoubleArrow = forwardRef(
               points={newArrow.points}
               stroke={newArrow.stroke}
               strokeWidth={newArrow.strokeWidth}
-              hitStrokeWidth={Math.max(90, newArrow.strokeWidth * 4)}
+              // The in-progress preview must never intercept pointer events.
+              listening={false}
               perfectDrawEnabled={false}
               pointerLength={15}
               pointerWidth={15}

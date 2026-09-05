@@ -13,14 +13,19 @@ export type EditableImageSource =
   | { kind: "dataUrl"; dataUrl: string; name?: string };
 
 /**
- * The result handed to `onSave` once the user confirms their edit. All four
- * representations are derived from the same flattened canvas in a single
- * pass — use whichever your upload pipeline needs.
+ * The result handed to `onSave` once the user confirms their edit.
+ *
+ * `blob` and `file` are the same bytes in two wrappers; use whichever your
+ * upload pipeline needs. `dataUrl` is **not** produced by default — encoding
+ * a full-resolution canvas to base64 is a synchronous, multi-megabyte,
+ * main-thread operation. Ask for it explicitly with `includeDataUrl: true`
+ * when calling `buildImageEditResult` yourself.
  */
 export interface ImageEditResult {
   blob: Blob;
   file: File;
-  dataUrl: string;
+  /** Only present when built with `includeDataUrl: true`. */
+  dataUrl: string | undefined;
   width: number;
   height: number;
 }
@@ -32,14 +37,29 @@ export interface ImageEditorModalProps {
   onClose: () => void;
   /** The image to edit. See {@link EditableImageSource}. */
   image: EditableImageSource;
-  /** Called with the edited image once the user confirms save/send. */
-  onSave: (result: ImageEditResult) => void;
+  /**
+   * Called with the edited image once the user confirms save/send.
+   *
+   * If it returns a promise, the editor keeps its save spinner up and the
+   * confirm button disabled until that promise settles — so your own upload
+   * is covered by the same double-tap guard as the export itself.
+   */
+  onSave: (result: ImageEditResult) => void | Promise<void>;
 }
 
 /**
  * A portable, WhatsApp-style image editor modal — crop, freehand drawing,
- * shapes (rectangle / circle / arrow / double-arrow / curve), and text
+ * shapes (rectangle / ellipse / arrow / double-arrow / curve), and text
  * overlays, with a dedicated mobile UI and a desktop sidebar UI.
+ *
+ * Canvases are backed at the device pixel ratio (capped at 3x) while all
+ * editor code works in logical pixels, and Save/Download re-render the photo
+ * from the original decode at up to its native resolution — so exports are
+ * not limited to the on-screen preview size.
+ *
+ * While open, the modal locks background scrolling and traps the browser's
+ * back gesture (via a throwaway `history.pushState` entry) so an edge swipe
+ * cannot navigate the underlying page away mid-edit. Both are undone on close.
  *
  * This component reads `window`/`document` on mount and must not be
  * server-rendered. In Next.js, import it with:
@@ -80,20 +100,52 @@ export declare function getImageSourceKey(
   source: EditableImageSource | null | undefined,
 ): string | null;
 
+/** Default export encoding used by the editor's Save and Download. */
+export declare const EXPORT_MIME_TYPE: string;
+/** Default export quality (0-1) used for the lossy {@link EXPORT_MIME_TYPE}. */
+export declare const EXPORT_QUALITY: number;
+
 /**
- * Builds an {@link ImageEditResult} from a canvas — blob, File, dataUrl, and
- * dimensions, all derived from a single `canvas.toBlob()` call. Called
- * internally by `ImageEditorModal`'s save flow; exported for advanced/
- * custom usage.
+ * The file extension for an encoded blob's *actual* MIME type.
+ *
+ * Always derive the extension from `blob.type`, never from the type you
+ * requested: `canvas.toBlob()` silently falls back to PNG when it cannot
+ * encode the requested format, and a PNG payload named ".webp" will not open
+ * everywhere.
+ */
+export declare function extensionForMimeType(mimeType: string | undefined): string;
+
+/**
+ * Builds the output file name for an edited image: strips any URL path and
+ * query, replaces the source extension, and applies an "edited-" prefix
+ * without stacking it on re-edits.
+ *
+ * ```ts
+ * buildEditedFileName("a/b/scan.jpeg?v=2", "jpg"); // "edited-scan.jpg"
+ * ```
+ */
+export declare function buildEditedFileName(
+  name: string | undefined | null,
+  extension?: string,
+): string;
+
+/**
+ * Builds an {@link ImageEditResult} from a canvas. Called internally by
+ * `ImageEditorModal`'s save flow; exported for advanced/custom usage.
  */
 export declare function buildImageEditResult(
   canvas: HTMLCanvasElement,
   options?: {
-    /** Defaults to "edited-image.png" */
+    /** Defaults to "edited-image.jpg" */
     fileName?: string;
-    /** Defaults to "image/png" */
+    /** Defaults to {@link EXPORT_MIME_TYPE} */
     mimeType?: string;
-    /** Only used for lossy mime types (e.g. "image/jpeg") */
+    /** Defaults to {@link EXPORT_QUALITY}; only used for lossy mime types. */
     quality?: number;
+    /**
+     * Also produce a base64 `dataUrl`. Off by default: it is a synchronous
+     * main-thread encode of several megabytes on a full-resolution canvas.
+     */
+    includeDataUrl?: boolean;
   },
 ): Promise<ImageEditResult>;

@@ -1,5 +1,5 @@
-"use client";
 
+"use client";
 import React, {
   useRef,
   useState,
@@ -7,7 +7,9 @@ import React, {
   useEffect,
   useImperativeHandle,
 } from "react";
-import { Stage, Layer, Circle, Transformer } from "react-konva";
+import { Stage, Layer, Ellipse, Transformer } from "react-konva";
+import { snapshotStage } from "@/utils/konvaSnapshot";
+import { useKonvaSelection } from "@/hooks/useKonvaSelection";
 import { getDashPattern } from "@/utils/getStrokePattern";
 import { KONVA_THRESHOLDS } from "@/utils/konvaThreshold";
 
@@ -34,6 +36,7 @@ const KonvaCircle = forwardRef(
       onElementDeselect,
       checkTrashZoneCollision,
       updateTrashZoneState,
+      onDelete,
     },
     ref,
   ) => {
@@ -41,6 +44,14 @@ const KonvaCircle = forwardRef(
     const [selectedId, setSelectedId] = useState(null);
     const stageRef = useRef(null);
     const trRef = useRef(null);
+    const dragOriginRef = useRef(null);
+
+    // Older saved shapes stored a single `radius`. Read through this so they
+    // keep rendering as circles instead of collapsing to nothing.
+    const radiiOf = (c) => ({
+      radiusX: c.radiusX ?? c.radius ?? 0,
+      radiusY: c.radiusY ?? c.radius ?? 0,
+    });
 
     useImperativeHandle(ref, () => ({
       flatten: () => {
@@ -49,7 +60,7 @@ const KonvaCircle = forwardRef(
           trRef.current.getLayer().batchDraw();
         }
         if (stageRef.current) {
-          const canvasEl = stageRef.current.toCanvas({ pixelRatio: 1 });
+          const canvasEl = snapshotStage(stageRef.current);
           onFlatten(canvasEl);
         }
         setCircles([]);
@@ -69,13 +80,15 @@ const KonvaCircle = forwardRef(
     useEffect(() => {
       const handleKeyDown = (e) => {
         if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
-          setCircles((circle) => circle.filter((c) => c.id !== selectedId));
+          if (onDelete) onDelete(selectedId);
+          else setCircles((circle) => circle.filter((c) => c.id !== selectedId));
           setSelectedId(null);
+          onElementDeselect?.();
         }
       };
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selectedId, setCircles]);
+    }, [selectedId, setCircles, onDelete, onElementDeselect]);
 
     const handleStageClick = (e) => {
       if (!active) return;
@@ -97,11 +110,16 @@ const KonvaCircle = forwardRef(
       if (!pos) return;
 
       const id = `circle-${Date.now()}`;
+      // Anchor the drag origin; the shape is derived from the bounding box
+      // between it and the pointer (see handleMouseMove), exactly like the
+      // rectangle tool.
+      dragOriginRef.current = { x: pos.x, y: pos.y };
       setNewCircle({
         id,
         x: pos.x,
         y: pos.y,
-        radius: 1,
+        radiusX: 0,
+        radiusY: 0,
         stroke: color,
         strokeWidth: brushSize,
         strokeStyle: strokeStyle,
@@ -124,11 +142,19 @@ const KonvaCircle = forwardRef(
       const pos = e.target.getStage().getPointerPosition();
       if (!pos) return;
 
-      const dx = pos.x - newCircle.x;
-      const dy = pos.y - newCircle.y;
+      const origin = dragOriginRef.current;
+      if (!origin) return;
+
+      // Bounding-box drag: the ellipse is inscribed in the rectangle spanning
+      // the origin and the pointer. The old code put the CENTRE at the origin
+      // and used the drag distance as the RADIUS, so the shape grew at twice
+      // the speed of the finger and never matched the rectangle tool's feel.
       setNewCircle({
         ...newCircle,
-        radius: Math.sqrt(dx * dx + dy * dy),
+        x: (origin.x + pos.x) / 2,
+        y: (origin.y + pos.y) / 2,
+        radiusX: Math.abs(pos.x - origin.x) / 2,
+        radiusY: Math.abs(pos.y - origin.y) / 2,
       });
     };
 
@@ -138,12 +164,14 @@ const KonvaCircle = forwardRef(
         e.evt.preventDefault();
       }
 
-      if (newCircle.radius >= KONVA_THRESHOLDS.MIN_CIRCLE_RADIUS) {
+      const min = KONVA_THRESHOLDS.MIN_CIRCLE_RADIUS;
+      if (newCircle.radiusX >= min && newCircle.radiusY >= min) {
         setCircles((cs) => [...cs, newCircle]);
         if (onAdd) {
           onAdd(newCircle);
         }
       }
+      dragOriginRef.current = null;
       setNewCircle(null);
     };
 
@@ -166,40 +194,43 @@ const KonvaCircle = forwardRef(
       const previousCircle = circles.find((c) => c.id === id);
       if (!previousCircle) return;
 
-      const scaleX = node.scaleX();
-      const scaleY = node.scaleY();
-      const uniformScale = Math.max(Math.abs(scaleX), Math.abs(scaleY));
-      const newRadius = Math.max(
-        previousCircle.radius * uniformScale,
-        KONVA_THRESHOLDS.MIN_CIRCLE_RADIUS,
-      );
+      const min = KONVA_THRESHOLDS.MIN_CIRCLE_RADIUS;
+      const prev = radiiOf(previousCircle);
 
-      const newCenterX = previousCircle.x;
-      const newCenterY = previousCircle.y;
+      // Bake each axis independently so side handles squash the shape into an
+      // ellipse and corner handles resize it freely. The old handler collapsed
+      // both scales into one `Math.max(...)` uniform factor and pinned the
+      // centre, so the shape could only ever grow as a circle.
+      const newRadiusX = Math.max(min, prev.radiusX * Math.abs(node.scaleX()));
+      const newRadiusY = Math.max(min, prev.radiusY * Math.abs(node.scaleY()));
+      const rotation = node.rotation();
+      const x = node.x();
+      const y = node.y();
 
-      node.radius(newRadius);
-      node.x(newCenterX);
-      node.y(newCenterY);
       node.scaleX(1);
       node.scaleY(1);
-      node.rotation(0);
-
-      node.getLayer().batchDraw();
+      node.getLayer()?.batchDraw();
 
       const newCircle = {
         ...previousCircle,
-        radius: newRadius,
-        x: newCenterX,
-        y: newCenterY,
+        radius: undefined, // superseded by radiusX/radiusY
+        radiusX: newRadiusX,
+        radiusY: newRadiusY,
+        rotation,
+        x,
+        y,
       };
 
       setCircles((cs) => cs.map((c) => (c.id === id ? newCircle : c)));
 
-      if (onMove && previousCircle) {
-        const hasChanged = previousCircle.radius !== newRadius;
-        if (hasChanged) {
-          onMove(id, newCircle, previousCircle);
-        }
+      if (onMove) {
+        const hasChanged =
+          prev.radiusX !== newRadiusX ||
+          prev.radiusY !== newRadiusY ||
+          previousCircle.x !== x ||
+          previousCircle.y !== y ||
+          (previousCircle.rotation || 0) !== rotation;
+        if (hasChanged) onMove(id, newCircle, previousCircle);
       }
     };
 
@@ -239,7 +270,11 @@ const KonvaCircle = forwardRef(
         checkTrashZoneCollision &&
         checkTrashZoneCollision(screenX, screenY)
       ) {
-        setCircles((circles) => circles.filter((c) => c.id !== id));
+        // Route deletion through history — the Konva arrays are derived from
+        // the action log, so a bare local filter is undone by the very next
+        // action or undo/redo (the shape reappears).
+        if (onDelete) onDelete(id);
+        else setCircles((circles) => circles.filter((c) => c.id !== id));
         setSelectedId(null);
         if (onElementDeselect) onElementDeselect();
         return;
@@ -259,18 +294,14 @@ const KonvaCircle = forwardRef(
       }
     };
 
-    useEffect(() => {
-      if (trRef.current && selectedId && stageRef.current) {
-        const node = stageRef.current.findOne(`#${selectedId}`);
-        if (node) {
-          trRef.current.nodes([node]);
-          trRef.current.getLayer().batchDraw();
-        }
-      } else if (trRef.current) {
-        trRef.current.nodes([]);
-        trRef.current.getLayer().batchDraw();
-      }
-    }, [selectedId, circles]);
+    useKonvaSelection({
+      stageRef,
+      trRef,
+      selectedId,
+      setSelectedId,
+      elements: circles,
+      onElementDeselect,
+    });
 
     useEffect(() => {
       if (selectedId) {
@@ -341,12 +372,13 @@ const KonvaCircle = forwardRef(
       >
         <Layer>
           {circles.map((circle) => (
-            <Circle
+            <Ellipse
               key={circle.id}
               id={circle.id}
               x={circle.x}
               y={circle.y}
-              radius={circle.radius}
+              {...radiiOf(circle)}
+              rotation={circle.rotation || 0}
               stroke={circle.stroke}
               strokeWidth={circle.strokeWidth}
               dash={circle.dash}
@@ -360,29 +392,43 @@ const KonvaCircle = forwardRef(
             />
           ))}
           {newCircle && (
-            <Circle
+            <Ellipse
               x={newCircle.x}
               y={newCircle.y}
-              radius={newCircle.radius}
+              radiusX={newCircle.radiusX}
+              radiusY={newCircle.radiusY}
               stroke={newCircle.stroke}
               strokeWidth={newCircle.strokeWidth}
               dash={newCircle.dash}
               fill={newCircle.fill}
+              listening={false}
             />
           )}
+          {/* Side anchors squash the ellipse along one axis, corner anchors
+              resize both — the WhatsApp behaviour. keepRatio/centeredScaling
+              must stay off or the side anchors just scale it uniformly. */}
           <Transformer
             ref={trRef}
-            rotateEnabled={false}
+            rotateEnabled
             enabledAnchors={[
               "top-left",
+              "top-center",
               "top-right",
+              "middle-left",
+              "middle-right",
               "bottom-left",
+              "bottom-center",
               "bottom-right",
             ]}
-            anchorSize={8}
+            anchorSize={10}
             borderDash={[4, 4]}
-            keepRatio={true}
-            centeredScaling={true}
+            keepRatio={false}
+            centeredScaling={false}
+            boundBoxFunc={(oldBox, newBox) => {
+              const min = KONVA_THRESHOLDS.MIN_CIRCLE_RADIUS * 2;
+              if (newBox.width < min || newBox.height < min) return oldBox;
+              return newBox;
+            }}
           />
         </Layer>
       </Stage>

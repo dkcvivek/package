@@ -43,6 +43,7 @@ const MobileView = ({
   textEditorRef,
   downloadImage,
   handleSave,
+  isSaving,
   handleCancel,
   isTextDragging,
   textColor,
@@ -108,11 +109,11 @@ const MobileView = ({
   };
 
   const barClass =
-    "flex items-center justify-between px-3 w-full flex-shrink-0";
+    "rie-flex rie-items-center rie-justify-between rie-px-3 rie-w-full rie-flex-shrink-0";
   const barStyle = { height: TOOLBAR_HEIGHT };
 
   return (
-    <div className="lg:hidden flex flex-col w-full bg-black text-white">
+    <div className="lg:rie-hidden rie-flex rie-flex-col rie-w-full rie-bg-black rie-text-white">
       {/* ── Level 1 ──────────────────────────────────────────────────────── */}
       {level === null && (
         <div
@@ -124,37 +125,50 @@ const MobileView = ({
           }}
         >
           <button onClick={handleCancel} title="Discard">
-            <X className="h-5 w-5" />
+            <X className="rie-h-5 rie-w-5" />
           </button>
 
-          <div className="flex items-center gap-5">
+          <div className="rie-flex rie-items-center rie-gap-5">
             <button onClick={downloadImage} title="Download">
-              <Download className="h-5 w-5" />
+              <Download className="rie-h-5 rie-w-5" />
             </button>
             <button onClick={() => enterLevel("crop", "crop")} title="Crop">
-              <Crop className="h-5 w-5" />
+              <Crop className="rie-h-5 rie-w-5" />
             </button>
             <button
               onClick={() => enterLevel("sticker", "rectangle")}
               title="Sticker"
             >
-              <Sticker className="h-5 w-5" />
+              <Sticker className="rie-h-5 rie-w-5" />
             </button>
             <button onClick={() => enterLevel("text", "text")} title="Text">
-              <Type className="h-5 w-5" />
+              <Type className="rie-h-5 rie-w-5" />
             </button>
             <button
               onClick={() => enterLevel("pencil", "pencil")}
               title="Pencil"
             >
-              <Pencil className="h-5 w-5" />
+              <Pencil className="rie-h-5 rie-w-5" />
             </button>
+            {/* Exporting the canvas and uploading it both take a moment on a
+                phone, so the tick has to stop accepting taps for the whole
+                round trip — otherwise an impatient second tap uploads the
+                same photo twice. Same box size as the icon so the bar
+                doesn't shift when it swaps. */}
             <button
               onClick={handleSave}
-              title="Send"
-              className="bg-green-700 p-1 rounded-full"
+              disabled={isSaving}
+              title={isSaving ? "Sending…" : "Send"}
+              aria-busy={isSaving}
+              className={`rie-bg-green-700 rie-p-1 rie-rounded-full ${
+                isSaving ? "rie-opacity-60 rie-cursor-not-allowed" : ""
+              }`}
             >
-              <Check className="h-5 w-5 text-white-400 font-bold" />
+              {isSaving ? (
+                <span className="rie-block rie-h-5 rie-w-5 rie-animate-spin rie-rounded-full rie-border-2 rie-border-white/40 rie-border-t-white" />
+              ) : (
+                <Check className="rie-h-5 rie-w-5 rie-text-white-400 rie-font-bold" />
+              )}
             </button>
           </div>
         </div>
@@ -163,21 +177,21 @@ const MobileView = ({
       {/* ── Level 2: Pencil ──────────────────────────────────────────────── */}
       {level === "pencil" && (
         <div className={barClass} style={barStyle}>
-          <div className="flex items-center gap-3">
+          <div className="rie-flex rie-items-center rie-gap-3">
             <button onClick={confirmPencil} title="Confirm">
-              <Check className="h-5 w-5 text-green-400" />
+              <Check className="rie-h-5 rie-w-5 rie-text-green-400" />
             </button>
             <button
               onClick={undo}
               disabled={!scopedCanUndo}
-              className="disabled:opacity-30"
+              className="disabled:rie-opacity-30"
               title="Undo"
             >
-              <Undo2 className="h-5 w-5" />
+              <Undo2 className="rie-h-5 rie-w-5" />
             </button>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs opacity-70 whitespace-nowrap">
+          <div className="rie-flex rie-items-center rie-gap-3">
+            <span className="rie-text-xs rie-opacity-70 rie-whitespace-nowrap">
               {brushSize}px
             </span>
             <input
@@ -187,10 +201,10 @@ const MobileView = ({
               step={1}
               value={brushSize}
               onChange={(e) => setBrushSize(Number(e.target.value))}
-              className="w-20 accent-white"
+              className="rie-w-20 rie-accent-white"
             />
             <label
-              className="relative w-6 h-6 rounded-full flex-shrink-0 cursor-pointer overflow-hidden"
+              className="rie-relative rie-w-6 rie-h-6 rie-rounded-full rie-flex-shrink-0 rie-cursor-pointer rie-overflow-hidden"
               style={{
                 background: currentColor,
                 border: "2px solid rgba(255,255,255,0.7)",
@@ -228,14 +242,14 @@ const MobileView = ({
           }}
         >
           <button onClick={confirmText} title="Confirm">
-            <Check className="h-5 w-5 text-green-400" />
+            <Check className="rie-h-5 rie-w-5 rie-text-green-400" />
           </button>
 
-          <div className="flex items-center gap-3">
+          <div className="rie-flex rie-items-center rie-gap-3">
             <button
               onClick={cycleTextBg}
               title="Text background"
-              className="relative w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+              className="rie-relative rie-w-7 rie-h-7 rie-rounded-md rie-flex rie-items-center rie-justify-center rie-flex-shrink-0"
               style={{
                 background:
                   textBgColor === "transparent"
@@ -245,7 +259,7 @@ const MobileView = ({
               }}
             >
               <span
-                className="text-xs font-semibold"
+                className="rie-text-xs rie-font-semibold"
                 style={{
                   color:
                     textBgColor === "#ffffff"
@@ -260,7 +274,7 @@ const MobileView = ({
             </button>
 
             <label
-              className="relative w-6 h-6 rounded-full flex-shrink-0 cursor-pointer overflow-hidden"
+              className="rie-relative rie-w-6 rie-h-6 rie-rounded-full rie-flex-shrink-0 rie-cursor-pointer rie-overflow-hidden"
               style={{
                 background: textColor,
                 border: "2px solid rgba(255,255,255,0.7)",
@@ -292,12 +306,12 @@ const MobileView = ({
         <div className={barClass} style={barStyle}>
           <button onClick={confirmCrop} disabled={!cropArea} title="Confirm">
             <Check
-              className={`h-5 w-5 ${cropArea ? "text-green-400" : "text-gray-500"}`}
+              className={`rie-h-5 rie-w-5 ${cropArea ? "rie-text-green-400" : "rie-text-gray-500"}`}
             />
           </button>
           <button
             onClick={discardCrop}
-            className="text-sm opacity-80"
+            className="rie-text-sm rie-opacity-80"
             title="Discard"
           >
             Discard
@@ -308,37 +322,37 @@ const MobileView = ({
       {/* ── Level 2: Sticker ─────────────────────────────────────────────── */}
       {level === "sticker" && (
         <div className={barClass} style={barStyle}>
-          <div className="flex items-center gap-3">
+          <div className="rie-flex rie-items-center rie-gap-3">
             <button onClick={confirmSticker} title="Confirm">
-              <Check className="h-5 w-5 text-green-400" />
+              <Check className="rie-h-5 rie-w-5 rie-text-green-400" />
             </button>
             <button
               onClick={undo}
               disabled={!scopedCanUndo}
-              className="disabled:opacity-30"
+              className="disabled:rie-opacity-30"
               title="Undo"
             >
-              <Undo2 className="h-5 w-5" />
+              <Undo2 className="rie-h-5 rie-w-5" />
             </button>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="rie-flex rie-items-center rie-gap-4">
             {[
-              ["rectangle", <Square className="h-5 w-5" />],
-              ["circle", <Circle className="h-5 w-5" />],
-              ["arrow", <ArrowRight className="h-5 w-5" />],
-              ["double-arrow", <ArrowRightLeft className="h-5 w-5" />],
+              ["rectangle", <Square className="rie-h-5 rie-w-5" />],
+              ["circle", <Circle className="rie-h-5 rie-w-5" />],
+              ["arrow", <ArrowRight className="rie-h-5 rie-w-5" />],
+              ["double-arrow", <ArrowRightLeft className="rie-h-5 rie-w-5" />],
             ].map(([tool, icon]) => (
               <button
                 key={tool}
                 onClick={() => handleToolChange(tool)}
-                className={`p-1 rounded ${activeTool === tool ? "bg-white/20" : ""}`}
+                className={`rie-p-1 rie-rounded ${activeTool === tool ? "rie-bg-white/20" : ""}`}
                 title={tool}
               >
                 {icon}
               </button>
             ))}
             <label
-              className="relative w-6 h-6 rounded-full flex-shrink-0 cursor-pointer overflow-hidden"
+              className="rie-relative rie-w-6 rie-h-6 rie-rounded-full rie-flex-shrink-0 rie-cursor-pointer rie-overflow-hidden"
               style={{
                 background: currentColor,
                 border: "2px solid rgba(255,255,255,0.7)",

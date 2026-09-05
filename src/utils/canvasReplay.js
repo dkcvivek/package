@@ -183,7 +183,14 @@ export function replayAllDrawingActions(canvas, actions) {
   const ctx = canvas?.getContext("2d");
   if (!canvas || !ctx) return;
 
+  // The canvas is HiDPI: canvas.width is DEVICE px while the active transform
+  // scales draw calls from logical px. Clear the buffer with the transform
+  // reset so the full backing store is wiped regardless of the ratio, then put
+  // the transform back — action payloads are all in logical px.
+  const t = ctx.getTransform();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.setTransform(t);
   ctx.globalCompositeOperation = "source-over";
 
   actions

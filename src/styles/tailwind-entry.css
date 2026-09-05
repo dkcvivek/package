@@ -1,2 +1,171 @@
+/*
+  Scoped base styles.
+
+  Preflight is off (tailwind.config.js) so the host page is never reset, and
+  every utility is emitted under `#image-editor-modal` (config `important`),
+  giving it specificity 1-1-0. The rules below are the parts of Tailwind's
+  Preflight the editor's markup depends on, scoped to the same id at 1-0-x:
+  above any host rule that isn't id-based, below our own utilities.
+*/
+
+/* Tailwind's --tw-* defaults — normally emitted by `@tailwind base`. Without
+   them, transform/ring utilities are invalid in hosts that have no Tailwind. */
+#image-editor-modal,
+#image-editor-modal *,
+#image-editor-modal ::before,
+#image-editor-modal ::after,
+#image-editor-modal ::backdrop {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style:  ;
+}
+
+/* `border: 0 solid` is what lets `border-width` utilities paint at all. */
+#image-editor-modal *,
+#image-editor-modal ::before,
+#image-editor-modal ::after,
+#image-editor-modal ::backdrop {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+}
+
+#image-editor-modal {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  tab-size: 4;
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  -webkit-tap-highlight-color: transparent;
+}
+
+#image-editor-modal :is(h1, h2, h3, h4, h5, h6) {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+#image-editor-modal :is(ol, ul, menu) {
+  list-style: none;
+}
+
+/* Keeps <canvas> and the lucide <svg> icons off the text baseline. */
+#image-editor-modal :is(img, svg, video, canvas, audio, iframe, embed, object) {
+  display: block;
+  vertical-align: middle;
+}
+
+#image-editor-modal :is(img, video) {
+  max-width: 100%;
+  height: auto;
+}
+
+/* The mobile toolbar buttons are bare <button>s; this is what makes them flat. */
+#image-editor-modal :is(button, input, select, optgroup, textarea) {
+  font: inherit;
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  border-radius: 0;
+  background-color: transparent;
+  opacity: 1;
+}
+
+#image-editor-modal ::file-selector-button {
+  font: inherit;
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  border-radius: 0;
+  background-color: transparent;
+  opacity: 1;
+  margin-inline-end: 4px;
+}
+
+#image-editor-modal button,
+#image-editor-modal input:where([type="button"], [type="reset"], [type="submit"]) {
+  -webkit-appearance: button;
+  appearance: button;
+}
+
+#image-editor-modal ::placeholder {
+  opacity: 1;
+}
+
+@supports (not (-webkit-appearance: -apple-pay-button)) or
+  (contain-intrinsic-size: 1px) {
+  #image-editor-modal ::placeholder {
+    color: color-mix(in oklab, currentcolor 50%, transparent);
+  }
+}
+
+#image-editor-modal textarea {
+  resize: vertical;
+}
+
+#image-editor-modal :-moz-focusring {
+  outline: auto;
+}
+
+#image-editor-modal ::-webkit-inner-spin-button,
+#image-editor-modal ::-webkit-outer-spin-button {
+  height: auto;
+}
+
+#image-editor-modal [hidden]:where(:not([hidden="until-found"])) {
+  display: none !important;
+}
+
 @tailwind components;
 @tailwind utilities;
